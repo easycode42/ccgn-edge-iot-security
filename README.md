@@ -2,7 +2,8 @@
 
 Team CCGN · 2026 oneM2M International Developer Competition · [한국어 안내](README.ko.md)
 
-CCGN registers simulated sensors on a **real ACME oneM2M CSE**, observes both the
+CCGN registers simulated sensors on a **real oneM2M CSE — tinyIoT (Sejong University) or ACME,
+with the same detector code** — observes both the
 request stream and the sensor notifications, detects four kinds of misbehaviour
 with rules plus an Isolation Forest, and **blocks a flooding sensor by updating its
 ACP — then proves the block with a real request that the CSE denies**. The CSE and
@@ -12,12 +13,12 @@ the alert feed are published and discovered as ETSI MEC011 services.
 
 | Area | State | Evidence |
 |---|---|---|
-| oneM2M flow: sensor AE → CSE → Subscription/Notification → detector AE | Working | `python -m ccgn demo`, `runtime/<run>/demo-report.json` |
+| oneM2M flow: sensor AE → CSE → Subscription/Notification → detector AE | Working on **tinyIoT** and **ACME** | `python -m ccgn demo`, `demo-report.json` in the run folder |
 | Detection and response for 4 threats | Working locally | 5 scenarios pass; 19 automated tests |
-| Detection and blocking latency | Measured on one PC | [`reports/latency-20261116-225202.json`](reports/latency-20261116-225202.json) |
+| Detection and blocking latency | Measured on one PC for both CSEs | tinyIoT: [`reports/latency-20261117-000002.json`](reports/latency-20261117-000002.json), ACME: [`reports/latency-20261116-225202.json`](reports/latency-20261116-225202.json) |
 | AI model evaluation | Synthetic data, 30 repeated trials | [`reports/evaluation-20261116-225504.json`](reports/evaluation-20261116-225504.json) |
 | MEC011 registration / discovery | Working against the **local contract double** | [`reports/mec-dryrun-20261116-225834.json`](reports/mec-dryrun-20261116-225834.json) |
-| **Real ETSI MEC Sandbox interworking** | **Passed on 2026-11-16** (MEC011 API interworking, see scope below) | [`reports/mec-check-20261116-231048.json`](reports/mec-check-20261116-231048.json) |
+| **Real ETSI MEC Sandbox interworking** | **Passed** with tinyIoT (2026-11-17) and with ACME (2026-11-16); MEC011 API interworking, see scope below | tinyIoT: [`reports/mec-check-20261117-001405.json`](reports/mec-check-20261117-001405.json), ACME: [`reports/mec-check-20261116-231048.json`](reports/mec-check-20261116-231048.json) |
 
 The ETSI claim is limited to what the passed report shows: MEC011 API interworking from
 the CCGN host with loopback service endpoints. The dashboard derives its MEC status from
@@ -33,7 +34,7 @@ Both are generated from the repository: `tools/record_demo.mjs` drives and recor
 `tools/build_deck.js` builds the deck from `reports/*.json`, `tools/render_slides.ps1` and `tools/make_video.ps1`
 assemble the video (Node 22+, PowerPoint and ffmpeg required for these tools only).
 
-## Quick start (Windows, Python 3.12, Git)
+## Quick start with ACME (Windows, Python 3.12, Git)
 
 ```powershell
 .\setup.ps1 -Python 'C:\path\to\python.exe'   # venv + ACME (pinned commit) + dependencies
@@ -47,6 +48,28 @@ Stop with `Ctrl+C`. Everything binds to 127.0.0.1 only.
 
 Linux/macOS: `./setup.sh && ./start.sh` are provided but **have not been tested**;
 the verified platform is Windows 11 with Python 3.12.
+
+## Quick start with tinyIoT (Linux or WSL2)
+
+tinyIoT is a C server for Linux/macOS, and the CSE must reach the detector's notification
+endpoint on loopback, so in this mode the whole of CCGN runs on the Linux side. On Windows
+that means WSL2; the dashboard is still opened at http://127.0.0.1:7581 in the Windows browser.
+
+```powershell
+wsl --cd <this folder> -- bash tools/setup_tinyiot.sh   # once: builds tinyIoT (pinned commit), creates a Python venv; no root needed
+.\start-tinyiot.ps1                                      # every time
+wsl --cd <this folder> -- bash tools/ccgn_wsl.sh demo    # any other command: demo, benchmark, mec-check ...
+```
+
+On native Linux: `bash tools/setup_tinyiot.sh`, then `bash tools/ccgn_wsl.sh run`.
+tinyIoT is pinned to commit `c140495622a6271fe16c8cf92315c2892c803003` (2026-10-06) and built with
+SQLite, port 7579, CSE name `cse-ccgn` and admin originator `CAdmin`, the same values as
+`config/acme.ini`. Verified on WSL2 with Ubuntu 24.04.
+
+**Difference between the two CSEs that matters here:** ACME is configured with an allow-list
+of AE originators, tinyIoT has none, so on tinyIoT an unknown originator can register an AE of
+its own. Reading or writing another AE's data is denied by ACP on both (RSC 4103), which is what
+the unknown-originator scenario checks.
 
 ACME is pinned to commit `283bd7d696090e983c07c149511102caab99642e`.
 `requirements.lock.txt` holds the verified versions; `.vendor/` and `.venv/` are not
@@ -73,7 +96,7 @@ $py = '.\.venv\Scripts\python.exe'
 Simulated sensors / bounded attack scenarios
           │ oneM2M Mca
           ▼
-Request logger :7580 ── forwards ──► ACME MN-CSE :7579
+Request logger :7580 ── forwards ──► oneM2M CSE :7579 (tinyIoT or ACME)
           │ request + response log     │ Subscription / Notification
           ▼                            ▼
               Detector (AE: Cdetector) :7581
@@ -89,7 +112,7 @@ Test client ── discovers `anomaly-alert` ────────► MEC pla
 
 The MEC platform is the local contract double on :7582 in a normal run, or the ETSI MEC
 Sandbox when `mec-check --sandbox` is used. The target deployment is TR-0080 Option D.
-The service registration is performed by CCGN code, not by an ACME plug-in, and the
+The service registration is performed by CCGN code, not by a CSE plug-in, and the
 request logger is not a protocol-translating IPE.
 
 ### Threat handling
@@ -120,21 +143,27 @@ the commands above.
 
 ### Live latency — 30 runs of every scenario, one PC, loopback
 
-| Metric | Median | Mean | p95 | Max |
-|---|---|---|---|---|
-| Sensor reading → model decision (via CSE notification), n=180 | 66.6 ms | 67.9 ms | 96.2 ms | 131.9 ms |
-| Abnormal reading sent → alert, n=60 | 60.5 ms | 62.4 ms | 80.8 ms | 100.2 ms |
-| Unknown originator: request arrival → alert, n=30 | 16.5 ms | 19.5 ms | 34.0 ms | 42.4 ms |
-| Cross-device access: request arrival → alert, n=30 | 15.7 ms | 20.2 ms | 35.8 ms | 47.7 ms |
-| Flood: threshold-crossing request → alert, n=30 | 15.2 ms | 20.8 ms | 35.7 ms | 42.1 ms |
-| Flood: block decision → ACP update acknowledged, n=30 | 15.4 ms | 16.8 ms | 30.6 ms | 35.2 ms |
-| **Flood: threshold-crossing request → sensor blocked at the CSE**, n=30 | **60.5 ms** | **63.5 ms** | **84.9 ms** | **121.1 ms** |
-| Flood requests still accepted after the threshold was crossed | 1 | 1.13 | 2 | 2 |
+| Metric (median / 95th percentile) | tinyIoT | ACME |
+|---|---|---|
+| Sensor reading → model decision (via CSE notification), n=180 | 37.6 / 57.8 ms | 66.6 / 96.2 ms |
+| Abnormal reading sent → alert, n=60 | 32.2 / 54.0 ms | 60.5 / 80.8 ms |
+| Unknown originator: request arrival → alert, n=30 | 4.8 / 10.2 ms | 16.5 / 34.0 ms |
+| Cross-device access: request arrival → alert, n=30 | 5.3 / 12.6 ms | 15.7 / 35.8 ms |
+| Flood: threshold-crossing request → alert, n=30 | 6.7 / 47.6 ms | 15.2 / 35.7 ms |
+| Flood: block decision → ACP update acknowledged, n=30 | 14.2 / 26.1 ms | 15.4 / 30.6 ms |
+| **Flood: threshold-crossing request → sensor blocked at the CSE**, n=30 | **40.8 / 79.7 ms** | **60.5 / 84.9 ms** |
+| Flood requests still accepted after the threshold was crossed (mean, max) | 7.90, 12 | 1.13, 2 |
 
-Normal traffic in the same runs: 180 readings, **0 alerts**. "Request arrival → alert"
-includes the forwarded CSE round trip because the logger records the CSE response first.
-These are single-host figures (Windows 11, Python 3.12, in-memory CSE); they are not a
-field, network, or scale claim.
+Normal traffic in the same runs: 180 readings and **0 alerts** on each CSE.
+
+The last row is the honest cost of reacting after the fact: the block lands tens of
+milliseconds after the threshold is crossed, and tinyIoT answers so quickly that most of the
+remaining bounded burst (12 requests) is served before it. A larger burst would be cut off at
+that point; a rate limiter in front of the CSE would be needed to stop the first requests.
+"Request arrival → alert" includes the forwarded CSE round trip because the logger records the
+CSE response first. tinyIoT ran under WSL2 (Ubuntu 24.04, SQLite), ACME on Windows 11 (Python
+3.12, in-memory database), both on the same PC. These are single-host figures, not a field,
+network, or scale claim, and not a benchmark of the two CSEs against each other.
 
 ### Model evaluation — synthetic data
 
@@ -174,10 +203,10 @@ See [docs/MEC.md](docs/MEC.md). In short, with the demo running:
 The command prints a GitHub device code, waits for you to authorise the ETSI MEC Sandbox,
 activates a network scenario, creates three application instance IDs, runs
 `confirm_ready` → register → discover → consume for both services, and removes everything
-it created. A failure is written as `mec-check-*-FAILED.json` and is never replaced by the
+it created. With tinyIoT: `wsl --cd <this folder> -- bash tools/ccgn_wsl.sh mec-check --sandbox`. A failure is written as `mec-check-*-FAILED.json` and is never replaced by the
 local result.
 
-**Result on 2026-11-16:** passed against `try-mec.etsi.org` (scenario `4g-5g-macro-v2x`,
+**Result:** passed against `try-mec.etsi.org` with ACME as the CSE on 2026-11-16 and with tinyIoT on 2026-11-17 (scenario `4g-5g-macro-v2x`,
 App Support v2): 3 × `confirm_ready` 204, both registrations 201, both discoveries 200,
 oneM2M retrieve through the discovered CSE entry RSC 2000, alert API read through the
 discovered entry 200, then full clean-up. The first attempt failed because the Sandbox was

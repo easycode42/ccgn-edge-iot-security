@@ -1,0 +1,184 @@
+{
+  "mode": "etsi_mec_sandbox",
+  "platform_host": "try-mec.etsi.org",
+  "cse": "tinyIoT",
+  "etsi_verified": true,
+  "passed": true,
+  "started": "2026-11-17T00:10:24+0900",
+  "scope": "MEC011 API interworking driven from the local CCGN host: registration, discovery and consumption of the oneM2M CSE and anomaly-alert services. Registered endpoints are loopback addresses, so this is not MEC application hosting, remote reachability, or conformance certification.",
+  "network_scenario": "4g-5g-macro-v2x",
+  "app_support_version": "v2",
+  "cse_discovered_and_accessed": true,
+  "alerts_discovered_and_accessed": true,
+  "steps": [
+    {
+      "step": "sandbox_login",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 1302.8
+    },
+    {
+      "step": "sandbox_namespace",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "step": "list_network_scenarios",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 1007.6
+    },
+    {
+      "step": "activate_network_scenario",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 1141.5
+    },
+    {
+      "step": "create_app_instance:ccgn-cse",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 1057.1
+    },
+    {
+      "step": "create_app_instance:ccgn-detector",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 317.9
+    },
+    {
+      "step": "create_app_instance:ccgn-test",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 316.5
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 955.4
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 294.5
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 295.4
+    },
+    {
+      "step": "register_service:ccgn-onem2m-cse-be11a8",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 296.0
+    },
+    {
+      "step": "discover_services:ccgn-onem2m-cse-be11a8",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 295.1
+    },
+    {
+      "step": "onem2m_retrieve_via_discovered_cse",
+      "ok": true,
+      "rsc": 2000,
+      "ms": 6.8
+    },
+    {
+      "step": "register_service:ccgn-anomaly-alert-be11a8",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 295.4
+    },
+    {
+      "step": "discover_services:ccgn-anomaly-alert-be11a8",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 296.6
+    },
+    {
+      "step": "alerts_via_discovered_service",
+      "ok": true,
+      "status": 200,
+      "alerts": 0,
+      "ms": 4.2
+    },
+    {
+      "step": "deregister_service",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 293.7
+    },
+    {
+      "step": "deregister_service",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 293.3
+    },
+    {
+      "step": "discover_services",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 296.9
+    },
+    {
+      "step": "services_removed",
+      "ok": true
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 336.2
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 321.2
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 317.0
+    },
+    {
+      "step": "deactivate_network_scenario",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 320.9
+    },
+    {
+      "step": "sandbox_logout",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 328.1
+    }
+  ]
+}

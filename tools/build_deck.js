@@ -218,7 +218,7 @@ async function crop(file, left, top, width, height) {
   });
   text(s, [
     { text: "Path: ", options: { bold: true } },
-    { text: "sensor AE → request logger → ACME CSE → subscription notification → detector. " },
+    { text: `sensor AE → request logger → ${CSE} CSE → subscription notification → detector. ` },
     { text: `Median ${r0(m["anomaly.send_to_alert_ms"].median)} ms from sending the reading to the alert.`, options: { bold: true, color: C.accent1 } },
   ], { x: 0.45, y: 3.95, w: 6.0, h: 0.6, fontSize: 14, color: C.text1 });
   text(s, "Dashboard screenshot from the recorded run (deliverables/CCGN_Demo.mp4)",
@@ -283,7 +283,7 @@ async function crop(file, left, top, width, height) {
        catGridLine: { style: "none" }, altText: "Bar chart of median and 95th percentile latency per scenario" });
   card(s, 6.9, 1.2, 2.65, 1.6, C.background2, "Latency callout");
   text(s, r0(enf.median) + " ms", { x: 7.08, y: 1.33, w: 2.3, h: 0.6, fontSize: 30, bold: true, color: C.accent1, fontFace: "Cambria" });
-  text(s, `median to block; ${r0(enf.p95)} ms at p95, ${r0(enf.max)} ms worst of ${enf.n}`, { x: 7.08, y: 1.98, w: 2.3, h: 0.7, fontSize: 12, color: C.text1 });
+  text(s, `median to block. 95th percentile ${r0(enf.p95)} ms, worst of ${enf.n} runs ${r0(enf.max)} ms`, { x: 7.08, y: 1.98, w: 2.3, h: 0.7, fontSize: 12, color: C.text1 });
   card(s, 6.9, 2.95, 2.65, 1.9, C.background2, "Latency scope");
   text(s, "How it was measured", { x: 7.08, y: 3.07, w: 2.3, h: 0.3, fontSize: 12, bold: true, color: C.text1 });
   text(s, `${LAT.data.runs} runs per scenario, one PC, loopback, ${CSE} as CSE. ACME on the same PC: ${r0(mA["flood.arrival_to_enforced_ms"].median)} ms to block. Not a network or scale result.`,

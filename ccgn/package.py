@@ -4,7 +4,7 @@ import zipfile
 
 INCLUDE_DIRS = ("ccgn", "config", "docs", "tests", "tools", "reports")
 INCLUDE_FILES = ("README.md", "README.ko.md", "LICENSE", "requirements.txt", "requirements.lock.txt",
-                 "setup.ps1", "start.ps1", "setup.sh", "start.sh", "실행.cmd", ".gitignore")
+                 "setup.ps1", "start.ps1", "start-tinyiot.ps1", "setup.sh", "start.sh", "실행.cmd", ".gitignore")
 SKIP_PARTS = {"__pycache__", ".pytest_cache"}
 SKIP_SUFFIXES = {".pyc", ".sqlite3", ".log"}
 

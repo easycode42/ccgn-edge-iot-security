@@ -6,9 +6,10 @@ Port 7582 in a normal run is **CCGN's own contract double**. It does not replace
 MEC Sandbox and proves nothing about conformance. This page describes the check against a
 real platform.
 
-**Status on 2026-11-16:** the check **passed against the ETSI MEC Sandbox**
-(`try-mec.etsi.org`, scenario `4g-5g-macro-v2x`, App Support v2); evidence in
-`reports/mec-check-20261116-231048.json`. An earlier attempt the same day failed and is kept as
+**Status:** the check **passed against the ETSI MEC Sandbox** (`try-mec.etsi.org`, scenario
+`4g-5g-macro-v2x`, App Support v2) with ACME as the CSE on 2026-11-16
+(`reports/mec-check-20261116-231048.json`) and with tinyIoT on 2026-11-17 (`reports/mec-check-20261117-001405.json`).
+With tinyIoT, run the commands below through `wsl --cd <repo> -- bash tools/ccgn_wsl.sh ...`. An earlier attempt the same day failed and is kept as
 `reports/mec-check-20261116-230705-FAILED.json` (see the last section).
 
 ## Option A — automatic (recommended)

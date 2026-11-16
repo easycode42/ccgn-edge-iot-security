@@ -4,7 +4,7 @@
 
 기본 데모의 7582 포트는 **CCGN이 만든 모의 API**입니다. ETSI MEC Sandbox를 대신하지 않으며 표준 적합성을 증명하지 않습니다. 이 문서는 실제 플랫폼에서 검증하는 방법입니다.
 
-**2026-11-16 기준:** **실제 ETSI MEC Sandbox(`try-mec.etsi.org`)에서 통과했습니다.** 근거는 `reports/mec-check-20261116-231048.json`입니다. 같은 날 첫 시도는 실패했고 그 기록도 `reports/mec-check-20261116-230705-FAILED.json`에 남아 있습니다.
+**현재 상태:** **실제 ETSI MEC Sandbox(`try-mec.etsi.org`)에서 통과했습니다.** ACME 기준 `reports/mec-check-20261116-231048.json`(11/16), tinyIoT 기준 `reports/mec-check-20261117-001405.json`(11/17). tinyIoT로 실행할 때는 아래 명령을 `wsl --cd <이 폴더> -- bash tools/ccgn_wsl.sh mec-check --sandbox` 형태로 실행합니다. 같은 날 첫 시도는 실패했고 그 기록도 `reports/mec-check-20261116-230705-FAILED.json`에 남아 있습니다.
 
 ## 방법 A — 자동 (권장)
 
