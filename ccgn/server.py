@@ -42,11 +42,11 @@ def logger_app(engine):
     return app
 
 
-def dashboard_app(engine, runtime_dir, root=None):
+def dashboard_app(engine, runtime_dir, root=None, cse="ACME"):
     app = Flask("ccgn-dashboard")
     app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024
     scenario_lock = threading.Lock()
-    state = {"ready": False, "scenario": None}
+    state = {"ready": False, "scenario": None, "cse": cse}
     app.ccgn_state = state
 
     @app.get("/")

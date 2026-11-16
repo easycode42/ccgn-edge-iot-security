@@ -34,6 +34,13 @@ def require_local_demo():
                            f"the CSE or alert API is not reachable: {exc}") from None
 
 
+def cse_name():
+    try:
+        return requests.get(UI_URL + "/api/state", timeout=5).json().get("cse")
+    except (requests.RequestException, ValueError):
+        return None
+
+
 def confirm_ready(mec, sandbox, ids, wait_seconds):
     """The platform of a freshly activated scenario needs time to come up; v2 then v1."""
     versions = ("v2", "v1") if sandbox else (None,)
@@ -114,7 +121,7 @@ def check(root, mode="external"):
 
     report = {"mode": {"sandbox": "etsi_mec_sandbox", "external": "external_mec",
                        "dry-run": "local_contract_double"}[mode],
-              "platform_host": host, "etsi_verified": False, "passed": False,
+              "platform_host": host, "cse": cse_name(), "etsi_verified": False, "passed": False,
               "started": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "scope": SCOPE}
     created = []
     mec = None

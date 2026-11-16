@@ -14,13 +14,19 @@ const fa = require("react-icons/fa");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(ROOT, "deliverables", "CCGN_Final_Report.pptx");
-const latest = prefix => {
-  const names = fs.readdirSync(path.join(ROOT, "reports"))
-    .filter(n => n.startsWith(prefix) && /\d\.json$/.test(n) && !n.includes("FAILED")).sort();
-  if (!names.length) throw new Error("No report " + prefix);
-  return { name: names.at(-1), data: JSON.parse(fs.readFileSync(path.join(ROOT, "reports", names.at(-1)), "utf8")) };
+const latest = (prefix, keep = () => true) => {
+  const found = fs.readdirSync(path.join(ROOT, "reports"))
+    .filter(n => n.startsWith(prefix) && /\d\.json$/.test(n) && !n.includes("FAILED")).sort()
+    .map(name => ({ name, data: JSON.parse(fs.readFileSync(path.join(ROOT, "reports", name), "utf8")) }))
+    .filter(r => keep(r.data));
+  if (!found.length) throw new Error("No report " + prefix);
+  return found.at(-1);
 };
-const LAT = latest("latency-"), EVAL = latest("evaluation-"), MEC = latest("mec-check-");
+// Reports written before the CSE became selectable carry no "cse" field: those runs used ACME.
+const cseOf = d => d.cse || "ACME";
+const LAT = latest("latency-", d => cseOf(d) === "tinyIoT"), LAT_ACME = latest("latency-", d => cseOf(d) === "ACME");
+const EVAL = latest("evaluation-"), MEC = latest("mec-check-");
+const CSE = cseOf(LAT.data), mA = LAT_ACME.data.metrics;
 const m = LAT.data.metrics, rep = EVAL.data.repeated.summary;
 const r0 = v => v.toFixed(0), r1 = v => v.toFixed(1), r2 = v => v.toFixed(2);
 const pct = v => (v * 100).toFixed(v === 1 || v === 0 ? 0 : 1) + "%";
@@ -101,13 +107,14 @@ async function crop(file, left, top, width, height) {
 
   // ── 2. Summary ───────────────────────────────────────────────────────────
   s = content("Overview", "What the prototype proves",
-    "The headline results. All four MVP threats from the interim plan are detected and handled on a real ACME oneM2M CSE. " +
+    "The headline results. All four MVP threats from the interim plan are detected and handled on tinyIoT, and the same detector code " +
+    "also runs unchanged on the ACME CSE. " +
     `A flooding sensor is blocked at the CSE a median of ${r0(m["flood.arrival_to_enforced_ms"].median)} milliseconds after the request that ` +
     `crossed the threshold. In the same live runs, ${LAT.data.normal_traffic.readings} normal readings produced ` +
     `${LAT.data.normal_traffic.alerts} alerts. And the MEC011 registration and discovery flow passed against the real ETSI MEC Sandbox. ` +
     "Every number in this deck is read from a report file in the repository.");
   const stats = [
-    ["4 / 4", "MVP threats detected and handled on a real ACME oneM2M CSE", C.accent1],
+    ["4 / 4", "MVP threats detected and handled on tinyIoT, and unchanged on ACME", C.accent1],
     [r0(m["flood.arrival_to_enforced_ms"].median) + " ms", "median from the threshold-crossing request to the sensor being blocked at the CSE", C.accent5],
     [`${LAT.data.normal_traffic.alerts} / ${LAT.data.normal_traffic.readings}`, "false alerts on normal readings across 30 live runs", C.accent4],
     ["Passed", "MEC011 registration and discovery on the real ETSI MEC Sandbox", C.accent3],
@@ -128,8 +135,8 @@ async function crop(file, left, top, width, height) {
   // ── 3. Architecture ──────────────────────────────────────────────────────
   pres.addSection({ title: "Design" });
   s = content("Design", "Architecture as built (TR-0080 Option D)",
-    "This is what runs today, all on one edge host. Simulated sensors send oneM2M requests through a request logger to a real ACME " +
-    "MN-CSE. The logger records every request and the CSE's answer, path 2. New sensor data reaches the detector as a oneM2M " +
+    "This is what runs today, all on one edge host. Simulated sensors send oneM2M requests through a request logger to a real " +
+    "oneM2M CSE: tinyIoT from Sejong University, or ACME, selected with one command-line option. The logger records every request and the CSE's answer, path 2. New sensor data reaches the detector as a oneM2M " +
     "notification, path 3. The detector is itself a oneM2M AE: it writes alerts into the CSE and updates the ACP to block, path 4. " +
     "Over MEC011 the CSE service and the alert service are registered and discovered, paths 5 and 6; the detector reaches the CSE " +
     "through the discovered address. The MEC platform is the ETSI MEC Sandbox in the interworking check, and a local stand-in in a normal run.");
@@ -150,7 +157,7 @@ async function crop(file, left, top, width, height) {
   box(0.45, 1.5, 1.6, 1.0, C.background1, H.accent1, "Sensor AEs", "Ctemp, Cdoor (simulated)");
   box(0.45, 2.75, 1.6, 1.0, C.background1, H.accent2, "Attack scenarios", "bounded, this host only", C.accent2);
   box(2.55, 1.5, 1.45, 1.0, C.background1, H.accent3, "Request logger", "records request and result");
-  box(4.4, 1.5, 2.95, 1.0, C.background1, H.dk1, "ACME MN-CSE", "AE · CNT · CIN · SUB · ACP");
+  box(4.4, 1.5, 2.95, 1.0, C.background1, H.dk1, "oneM2M CSE: tinyIoT or ACME", "AE · CNT · CIN · SUB · ACP");
   box(3.3, 2.95, 3.2, 0.85, C.background1, H.accent4, "Detector (oneM2M AE)", "rules + Isolation Forest · alert · ACP update", C.accent4);
   box(2.55, 4.15, 4.8, 0.55, C.background1, H.accent5, "MEC platform  (MEC011 over Mp1): service registry and discovery", null, C.accent5);
   box(7.9, 1.5, 1.65, 1.0, C.background1, H.accent1, "Dashboard", "status, alerts, history", C.accent1);
@@ -240,19 +247,22 @@ async function crop(file, left, top, width, height) {
   });
   text(s, [
     { text: `${r2(m["flood.requests_admitted_after_trigger"].mean)} requests`, options: { bold: true, color: C.accent2 } },
-    { text: ` on average still got through after the threshold was crossed (at most ${r0(m["flood.requests_admitted_after_trigger"].max)}). ` },
-    { text: "Recovery is verified the same way: after the operator restores access, a real request must succeed." },
+    { text: ` of the bounded burst still got through on ${CSE} after the threshold was crossed (at most ${r0(m["flood.requests_admitted_after_trigger"].max)}; ` +
+            `${r2(mA["flood.requests_admitted_after_trigger"].mean)} on the slower ACME). ` },
+    { text: "Restoring access is verified the same way." },
   ], { x: 0.45, y: 4.1, w: 5.9, h: 1.0, fontSize: 14, color: C.text1 });
 
   // ── 7. Latency ───────────────────────────────────────────────────────────
   pres.addSection({ title: "Results" });
   const enf = m["flood.arrival_to_enforced_ms"];
   s = content("Results", `A flooding sensor is blocked in about ${r0(enf.median)} ms`,
-    `We repeated every scenario ${LAT.data.runs} times against the running system and measured with one process clock. ` +
+    `We repeated every scenario ${LAT.data.runs} times against the running system with ${CSE} as the CSE and measured with one process clock. ` +
     `From the request that crosses the flood threshold to the ACP update being acknowledged by the CSE takes a median of ${r1(enf.median)} ` +
     `milliseconds and ${r1(enf.p95)} at the 95th percentile. A sensor reading needs about ${r0(m["normal.send_to_inspected_ms"].median)} milliseconds ` +
-    "to travel through the CSE notification to a model decision. These are single-PC loopback figures, so they show that the edge loop is " +
-    "short, not how a distributed deployment would perform.");
+    `to travel through the CSE notification to a model decision. With ACME on the same PC the block takes ${r0(mA["flood.arrival_to_enforced_ms"].median)} milliseconds. ` +
+    "Because the block lands tens of milliseconds after detection, a fast burst is partly served before it: on tinyIoT about " +
+    `${r0(m["flood.requests_admitted_after_trigger"].mean)} more requests get through. These are single-PC loopback figures, so they show that the ` +
+    "edge loop is short, not how a distributed deployment would perform.");
   const rows7 = [
     ["Unknown originator: request → alert", m["unregistered.arrival_to_alert_ms"]],
     ["Cross-device access: request → alert", m["acp.arrival_to_alert_ms"]],
@@ -276,7 +286,7 @@ async function crop(file, left, top, width, height) {
   text(s, `median to block; ${r0(enf.p95)} ms at p95, ${r0(enf.max)} ms worst of ${enf.n}`, { x: 7.08, y: 1.98, w: 2.3, h: 0.7, fontSize: 12, color: C.text1 });
   card(s, 6.9, 2.95, 2.65, 1.9, C.background2, "Latency scope");
   text(s, "How it was measured", { x: 7.08, y: 3.07, w: 2.3, h: 0.3, fontSize: 12, bold: true, color: C.text1 });
-  text(s, `${LAT.data.runs} runs of every scenario on one Windows PC over loopback, in-memory CSE, one clock. Not a network or scale result.`,
+  text(s, `${LAT.data.runs} runs per scenario, one PC, loopback, ${CSE} as CSE. ACME on the same PC: ${r0(mA["flood.arrival_to_enforced_ms"].median)} ms to block. Not a network or scale result.`,
     { x: 7.08, y: 3.4, w: 2.3, h: 1.35, fontSize: 12, color: C.text2 });
 
   // ── 8. Model evaluation ──────────────────────────────────────────────────
@@ -320,7 +330,7 @@ async function crop(file, left, top, width, height) {
     "register the oneM2M CSE as a service, discover it and retrieve a oneM2M resource through the discovered address, register and discover the " +
     "alert service, and read the alerts. Everything created is removed again. The first attempt failed because we called the Sandbox before its " +
     "services had started; that failed report is kept in the repository. Scope: the endpoints are loopback addresses, so this shows API " +
-    "interworking, not MEC application hosting.");
+    `interworking, not MEC application hosting. The CSE behind the registered service in this run was ${cseOf(MEC.data)}.`);
   const flow = [
     ["Provision", "Sandbox login, scenario, 3 app instances", st("create_app_instance")],
     ["confirm_ready", "CSE helper, detector, test client", st("confirm_ready")],
@@ -345,7 +355,7 @@ async function crop(file, left, top, width, height) {
   ], { x: 0.45, y: 3.55, w: 4.5, h: 1.45, fontSize: 12, color: C.text1, paraSpaceAfter: 4 });
   card(s, 5.2, 3.2, 4.35, 1.75, C.background2, "MEC scope");
   text(s, "Scope of this evidence", { x: 5.4, y: 3.32, w: 3.95, h: 0.3, fontSize: 14, bold: true, color: C.text1 });
-  text(s, "Services are registered with loopback endpoints and consumed on the same PC. This shows MEC011 API interworking with the real platform. " +
+  text(s, `CSE in this run: ${cseOf(MEC.data)}. Services are registered with loopback endpoints and consumed on the same PC. This shows MEC011 API interworking with the real platform. ` +
     "It is not MEC application hosting, remote reachability or conformance certification.",
     { x: 5.4, y: 3.66, w: 3.95, h: 1.2, fontSize: 12, color: C.text2 });
 
@@ -353,12 +363,12 @@ async function crop(file, left, top, width, height) {
   pres.addSection({ title: "Assessment" });
   s = content("Assessment", "Planned in October, delivered in November",
     "Compared with the interim plan. The core loop, the four MVP threats, the Isolation Forest, verified ACP blocking and the MEC011 services " +
-    "are delivered. Two things changed: the dashboard is a small Flask page instead of Streamlit so that it runs in the same process as the " +
+    "are delivered. The interim plan named ACME; the prototype now runs on tinyIoT as well, with no change to the detector. Two things changed: the dashboard is a small Flask page instead of Streamlit so that it runs in the same process as the " +
     "detector, and we kept two sensors, temperature and door, and dropped humidity. None of the stretch goals were done.");
   const ok = t => cell(t, { bold: true, color: C.accent1 }), no = t => cell(t, { bold: true, color: C.accent2 }), ch = t => cell(t, { bold: true, color: C.accent3 });
   s.addTable([
     [head("Interim plan"), head("Status"), head("What exists now")],
-    [cell("Sensor AE → CSE → notification → detector"), ok("Delivered"), cell("Real ACME CSE, subscription with verification")],
+    [cell("Sensor AE → CSE → notification → detector"), ok("Delivered"), cell("tinyIoT and ACME, same detector code")],
     [cell("Four MVP threats"), ok("Delivered"), cell("Five pass/fail scenarios including normal traffic")],
     [cell("Rules + Isolation Forest"), ok("Delivered"), cell("Compared in 30 repeated offline trials")],
     [cell("ACP blocking"), ok("Delivered"), cell("Block and restore verified by real CSE responses")],
@@ -423,5 +433,5 @@ async function crop(file, left, top, width, height) {
     if (!entry.dir) clean.file(name, await entry.async("nodebuffer"), { createFolders: false });
   }
   fs.writeFileSync(OUT, await clean.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
-  console.log("Saved: " + OUT + `  (latency ${LAT.name}, evaluation ${EVAL.name}, MEC ${MEC.name})`);
+  console.log("Saved: " + OUT + `  (latency ${LAT.name} + ${LAT_ACME.name}, evaluation ${EVAL.name}, MEC ${MEC.name})`);
 })();

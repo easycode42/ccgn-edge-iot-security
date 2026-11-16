@@ -1,0 +1,116 @@
+{
+  "kind": "live_loopback_benchmark",
+  "cse": "tinyIoT",
+  "runs": 30,
+  "finished": "2026-11-17T00:00:02+0900",
+  "host": {
+    "system": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "machine": "x86_64"
+  },
+  "definitions": {
+    "send_to_inspected_ms": "sensor client send -> logger -> CSE -> notification -> model decision",
+    "send_to_alert_ms": "client send -> alert decision (anomaly: via CSE notification)",
+    "arrival_to_alert_ms": "request arrival at the request logger -> alert decision (includes the forwarded CSE round trip)",
+    "acp_update_ms": "block decision -> ACP update acknowledged by the CSE",
+    "arrival_to_enforced_ms": "arrival of the threshold-crossing request -> ACP update acknowledged",
+    "requests_admitted_after_trigger": "flood requests the CSE still accepted after the threshold-crossing request (count, not ms)"
+  },
+  "normal_traffic": {
+    "readings": 180,
+    "alerts": 0
+  },
+  "metrics": {
+    "acp.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 5.938086433434364,
+      "median": 5.260213999918051,
+      "p95": 12.56746299986844,
+      "min": 2.8811769998355885,
+      "max": 12.797917000170855,
+      "stdev": 2.863887122024327
+    },
+    "acp.send_to_alert_ms": {
+      "n": 30,
+      "mean": 7.477761766676849,
+      "median": 6.705454999973881,
+      "p95": 14.8907410002721,
+      "min": 3.902294999534206,
+      "max": 16.244937000010395,
+      "stdev": 3.2645649353572317
+    },
+    "anomaly.send_to_alert_ms": {
+      "n": 60,
+      "mean": 34.63082879999698,
+      "median": 32.18217650010047,
+      "p95": 53.978012999323255,
+      "min": 21.654146000400942,
+      "max": 81.00284400006785,
+      "stdev": 10.56601446391203
+    },
+    "flood.acp_update_ms": {
+      "n": 30,
+      "mean": 14.499916166550975,
+      "median": 14.166800999646512,
+      "p95": 26.062396000270383,
+      "min": 8.052029999817023,
+      "max": 30.792347999522462,
+      "stdev": 4.996470850709028
+    },
+    "flood.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 12.74271493333193,
+      "median": 6.732120999458857,
+      "p95": 47.62547399968753,
+      "min": 2.5499679995846236,
+      "max": 56.68349200004741,
+      "stdev": 13.641053521891587
+    },
+    "flood.arrival_to_enforced_ms": {
+      "n": 30,
+      "mean": 45.58025219997338,
+      "median": 40.803977500218025,
+      "p95": 79.66764100001456,
+      "min": 30.23747600036586,
+      "max": 80.69343999977718,
+      "stdev": 14.022297652183324
+    },
+    "flood.requests_admitted_after_trigger": {
+      "n": 30,
+      "mean": 7.9,
+      "median": 7.0,
+      "p95": 12.0,
+      "min": 4.0,
+      "max": 12.0,
+      "stdev": 2.771156860379359
+    },
+    "normal.send_to_inspected_ms": {
+      "n": 180,
+      "mean": 39.64874532775866,
+      "median": 37.585957999908715,
+      "p95": 57.830392999676405,
+      "min": 17.763770000783552,
+      "max": 193.51225899936253,
+      "stdev": 17.67477498096064
+    },
+    "unregistered.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 5.62268469987733,
+      "median": 4.749288000311935,
+      "p95": 10.156601999369741,
+      "min": 2.4955039998530992,
+      "max": 24.013622999518702,
+      "stdev": 3.918903051910894
+    },
+    "unregistered.send_to_alert_ms": {
+      "n": 30,
+      "mean": 7.079495666645623,
+      "median": 6.284891499490186,
+      "p95": 11.938644999645476,
+      "min": 3.5115509999741334,
+      "max": 25.897548000102688,
+      "stdev": 4.104186132397134
+    }
+  },
+  "warning": "Single PC, loopback, one simulated sensor, bounded 25-request burst. Not a field or network-scale performance claim."
+}

@@ -71,7 +71,7 @@ def benchmark(root, runs=20):
         # Leave the temperature sensor usable after the last flood scenario.
         requests.post(UI_URL + "/api/restore", headers=CONTROL, timeout=30)
     report = {
-        "kind": "live_loopback_benchmark", "runs": runs,
+        "kind": "live_loopback_benchmark", "cse": state.get("cse"), "runs": runs,
         "finished": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "host": {"system": platform.platform(), "python": platform.python_version(),
                  "machine": platform.machine()},

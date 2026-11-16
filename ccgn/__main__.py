@@ -25,38 +25,58 @@ def free_ports():
                 raise RuntimeError(f"Port {port} already in use. Stop the previous demo first.")
 
 
-def run():
+CSE_NAMES = {"acme": "ACME", "tinyiot": "tinyIoT"}
+
+
+def start_cse(kind, run_dir, log):
+    """Start the chosen oneM2M CSE on :7579 with a fresh database inside run_dir."""
+    env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+    if kind == "acme":
+        shutil.copyfile(ROOT / "config" / "acme.ini", run_dir / "acme.ini")
+        command = [sys.executable, "-X", "utf8", "-m", "acmecse", "--headless", "--base-directory",
+                   str(run_dir), "--config", "acme.ini", "--no-remote-cse"]
+        cwd = ROOT
+    else:
+        # tinyIoT is a C server built by tools/setup_tinyiot.sh (Linux / WSL). Port, CSE name and
+        # admin originator are compiled in to match config/acme.ini; its SQLite file lands in cwd.
+        binary = Path(os.environ.get("CCGN_TINYIOT_BIN") or
+                      Path.home() / "ccgn-tinyiot" / "tinyIoT" / "source" / "server" / "server")
+        if not binary.is_file():
+            raise RuntimeError(f"tinyIoT binary not found at {binary}; run tools/setup_tinyiot.sh "
+                               "(Linux / WSL) or set CCGN_TINYIOT_BIN")
+        command, cwd = [str(binary)], run_dir
+    return subprocess.Popen(command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env)
+
+
+def run(cse="acme"):
     from .detector import Detector
     from .mec import MecClient, local_registry
     from .server import dashboard_app, logger_app, serve
     from .store import Store
 
     free_ports()
-    run_dir = ROOT / "runtime" / (time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6])
+    name = CSE_NAMES[cse]
+    runtime = Path(os.environ.get("CCGN_RUNTIME") or ROOT / "runtime")
+    run_dir = runtime / (time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6])
     run_dir.mkdir(parents=True)
-    shutil.copyfile(ROOT / "config" / "acme.ini", run_dir / "acme.ini")
-    log = open(run_dir / "acme-process.log", "w", encoding="utf-8")
+    log = open(run_dir / f"{cse}-process.log", "w", encoding="utf-8")
     child = None
     servers = []
     try:
-        child_env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
-        child = subprocess.Popen([sys.executable, "-X", "utf8", "-m", "acmecse", "--headless",
-                                  "--base-directory", str(run_dir), "--config", "acme.ini",
-                                  "--no-remote-cse"], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
-                                 env=child_env)
+        child = start_cse(cse, run_dir, log)
         for _ in range(120):
             if child.poll() is not None:
-                raise RuntimeError(f"ACME stopped; see {run_dir / 'acme-process.log'}")
+                raise RuntimeError(f"{name} stopped; see {run_dir / (cse + '-process.log')}")
             try:
-                checked(call("GET", BASE + "/CAdmin"))
+                checked(call("GET", BASE))
                 break
             except (requests.RequestException, RuntimeError):
                 time.sleep(0.25)
         else:
-            raise TimeoutError("ACME did not become ready within 30 seconds")
+            raise TimeoutError(f"{name} did not become ready within 30 seconds")
         store = Store(run_dir / "events.sqlite3")
         engine = Detector(store)
-        ui = dashboard_app(engine, run_dir, ROOT)
+        ui = dashboard_app(engine, run_dir, ROOT, name)
         servers.extend([serve(ui, 7581), serve(logger_app(engine), 7580), serve(local_registry(), 7582)])
         engine.resources = provision()
         mec = MecClient()
@@ -70,17 +90,18 @@ def run():
         mec.ready("test-app")
         endpoint = mec.discover("anomaly-alert")
         requests.get(endpoint, timeout=5).raise_for_status()
-        store.add("mec", {"mode": "local_mock", "cse_discovered_and_accessed": True,
+        store.add("mec", {"mode": "local_mock", "cse": name, "cse_discovered_and_accessed": True,
                            "alert_discovered_and_accessed": True, "etsi_verified": False})
         ui.ccgn_state["ready"] = True
-        (ROOT / "runtime" / "latest.json").write_text(json.dumps({"directory": str(run_dir)}), encoding="utf-8")
+        (runtime / "latest.json").write_text(json.dumps({"directory": str(run_dir), "cse": name}),
+                                             encoding="utf-8")
         from .mec_check import latest_status
-        print(f"CCGN ready: {UI_URL}\nActual ACME CSE: {CSE_URL}\n"
+        print(f"CCGN ready: {UI_URL}\noneM2M CSE: {name} at {CSE_URL}\n"
               f"MEC in this run: local contract double. Real platform: {latest_status(ROOT)}\n"
               f"Evidence: {run_dir}\nCtrl+C to stop.", flush=True)
         while child.poll() is None:
             time.sleep(0.5)
-        raise RuntimeError("ACME process exited unexpectedly")
+        raise RuntimeError(f"{name} process exited unexpectedly")
     finally:
         for server in servers:
             server.close()
@@ -101,7 +122,8 @@ def demo():
         state = requests.get(UI_URL + "/api/state", timeout=5).json()
         scenario = state.get("scenario")
         if scenario and not scenario["running"]:
-            report = {"mec": state["mec"], "scenario": scenario, "counts": state["counts"]}
+            report = {"cse": state.get("cse"), "mec": state["mec"], "scenario": scenario,
+                      "counts": state["counts"]}
             dest = Path(state["runtime"]) / "demo-report.json"
             dest.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
             print(json.dumps(report, indent=2, ensure_ascii=False))
@@ -116,6 +138,8 @@ def demo():
 def main():
     parser = argparse.ArgumentParser(description="CCGN local edge security demonstrator")
     parser.add_argument("command", choices=["run", "demo", "benchmark", "evaluate", "mec-check", "package"])
+    parser.add_argument("--cse", choices=sorted(CSE_NAMES), default=os.environ.get("CCGN_CSE", "acme"),
+                        help="run: which oneM2M CSE to start (tinyiot needs Linux / WSL)")
     parser.add_argument("--runs", type=int, default=20, help="benchmark: repetitions per scenario")
     parser.add_argument("--trials", type=int, default=30, help="evaluate: repeated trials with new seeds")
     parser.add_argument("--sandbox", action="store_true",
@@ -124,7 +148,7 @@ def main():
                         help="mec-check: same flow against the local double (not ETSI evidence)")
     args = parser.parse_args()
     if args.command == "run":
-        run()
+        run(args.cse)
     elif args.command == "demo":
         demo()
     elif args.command == "evaluate":
