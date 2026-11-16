@@ -1,0 +1,104 @@
+{
+  "recorded": "2026-11-16T22:58:48+0900",
+  "python": "3.12.14",
+  "system": "Windows-11-10.0.26200-SP0",
+  "acme_commit": "283bd7d696090e983c07c149511102caab99642e",
+  "automated_tests_passed": 19,
+  "demo": {
+    "all_passed": true,
+    "scenarios": [
+      {
+        "alerts": 0,
+        "duration_seconds": 2.355253800051287,
+        "latency": {
+          "send_to_inspected_ms": [
+            49.60600001504645,
+            83.40659999521449,
+            75.72370005073026,
+            99.19559996342286,
+            69.01300000026822,
+            49.79999997885898
+          ]
+        },
+        "passed": true,
+        "scenario": "normal",
+        "since_event_id": 3
+      },
+      {
+        "alerts": 1,
+        "duration_seconds": 0.07251830003224313,
+        "latency": {
+          "arrival_to_alert_ms": 15.298200014512986,
+          "send_to_alert_ms": 21.22570003848523
+        },
+        "passed": true,
+        "scenario": "unregistered",
+        "since_event_id": 17
+      },
+      {
+        "alerts": 1,
+        "duration_seconds": 0.08098660001996905,
+        "latency": {
+          "arrival_to_alert_ms": 28.03349995519966,
+          "send_to_alert_ms": 33.23199995793402
+        },
+        "passed": true,
+        "scenario": "acp",
+        "since_event_id": 21
+      },
+      {
+        "alerts": 2,
+        "duration_seconds": 0.15886419999878854,
+        "latency": {
+          "send_to_alert_ms": [
+            48.44590002903715,
+            56.22290004976094
+          ]
+        },
+        "passed": true,
+        "scenario": "anomaly",
+        "since_event_id": 25
+      },
+      {
+        "alerts": 2,
+        "duration_seconds": 0.5875814000028186,
+        "latency": {
+          "acp_update_ms": 15.985800011549145,
+          "arrival_to_alert_ms": 28.005899977870286,
+          "arrival_to_enforced_ms": 61.12769996980205,
+          "requests_admitted_after_trigger": 1
+        },
+        "passed": true,
+        "scenario": "flood",
+        "since_event_id": 33
+      }
+    ],
+    "event_counts_after_demo": {
+      "alert": 6,
+      "mec": 1,
+      "notification_verified": 1,
+      "request": 36,
+      "response": 6,
+      "scenario": 5,
+      "sensor": 8
+    }
+  },
+  "error_events": 0,
+  "mec": {
+    "real_platform_status": "ETSI MEC Sandbox API interworking verified 2026-11-16",
+    "dry_run_report": "mec-dryrun-20261116-225834.json",
+    "dry_run_passed": true,
+    "dry_run_mode": "local_contract_double",
+    "etsi_verified": true,
+    "real_check_report": "mec-check-20261116-231048.json",
+    "real_check_passed": true,
+    "platform_host": "try-mec.etsi.org",
+    "earlier_failed_attempt": "mec-check-20261116-230705-FAILED.json"
+  },
+  "related_reports": [
+    "evaluation-20261111-221440.json",
+    "evaluation-20261116-225504.json",
+    "latency-20261116-225202.json"
+  ],
+  "scope": "Single PC, loopback, simulated sensors. ETSI evidence is MEC011 API interworking with loopback service endpoints only."
+}

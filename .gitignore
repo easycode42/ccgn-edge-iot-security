@@ -1,0 +1,11 @@
+.venv/
+.vendor/
+runtime/
+__pycache__/
+.pytest_cache/
+.env
+*.pyc
+dist/
+deliverables/recording/frames/
+deliverables/recording/frames.txt
+deliverables/slides/

@@ -1,0 +1,115 @@
+{
+  "kind": "live_loopback_benchmark",
+  "runs": 30,
+  "finished": "2026-11-16T22:52:02+0900",
+  "host": {
+    "system": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.14",
+    "machine": "AMD64"
+  },
+  "definitions": {
+    "send_to_inspected_ms": "sensor client send -> logger -> CSE -> notification -> model decision",
+    "send_to_alert_ms": "client send -> alert decision (anomaly: via CSE notification)",
+    "arrival_to_alert_ms": "request arrival at the request logger -> alert decision (includes the forwarded CSE round trip)",
+    "acp_update_ms": "block decision -> ACP update acknowledged by the CSE",
+    "arrival_to_enforced_ms": "arrival of the threshold-crossing request -> ACP update acknowledged",
+    "requests_admitted_after_trigger": "flood requests the CSE still accepted after the threshold-crossing request (count, not ms)"
+  },
+  "normal_traffic": {
+    "readings": 180,
+    "alerts": 0
+  },
+  "metrics": {
+    "acp.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 20.221603343573708,
+      "median": 15.728850004961714,
+      "p95": 35.81199998734519,
+      "min": 10.31939999666065,
+      "max": 47.7314000017941,
+      "stdev": 9.610075678297212
+    },
+    "acp.send_to_alert_ms": {
+      "n": 30,
+      "mean": 28.651113332792495,
+      "median": 22.6461999991443,
+      "p95": 52.391700039152056,
+      "min": 15.278499980922788,
+      "max": 53.23219997808337,
+      "stdev": 11.547419918563778
+    },
+    "anomaly.send_to_alert_ms": {
+      "n": 60,
+      "mean": 62.36852166960792,
+      "median": 60.51040001329966,
+      "p95": 80.77429997501895,
+      "min": 46.994299977086484,
+      "max": 100.23099998943508,
+      "stdev": 11.119508622824714
+    },
+    "flood.acp_update_ms": {
+      "n": 30,
+      "mean": 16.754050007633243,
+      "median": 15.439549984876066,
+      "p95": 30.58210003655404,
+      "min": 10.354800033383071,
+      "max": 35.20010004285723,
+      "stdev": 5.987722496889868
+    },
+    "flood.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 20.813460000014555,
+      "median": 15.174050000496209,
+      "p95": 35.65779997734353,
+      "min": 12.114299985114485,
+      "max": 42.102200037334114,
+      "stdev": 8.608194946162495
+    },
+    "flood.arrival_to_enforced_ms": {
+      "n": 30,
+      "mean": 63.541756669292226,
+      "median": 60.54079998284578,
+      "p95": 84.90950003033504,
+      "min": 42.87349997321144,
+      "max": 121.07260001357645,
+      "stdev": 15.745928357287507
+    },
+    "flood.requests_admitted_after_trigger": {
+      "n": 30,
+      "mean": 1.1333333333333333,
+      "median": 1.0,
+      "p95": 2.0,
+      "min": 0.0,
+      "max": 2.0,
+      "stdev": 0.6288102248298565
+    },
+    "normal.send_to_inspected_ms": {
+      "n": 180,
+      "mean": 67.93372166769889,
+      "median": 66.6303500183858,
+      "p95": 96.21340001467615,
+      "min": 39.55569997197017,
+      "max": 131.89900002907962,
+      "stdev": 14.492633865452422
+    },
+    "unregistered.arrival_to_alert_ms": {
+      "n": 30,
+      "mean": 19.52450333046727,
+      "median": 16.49255002848804,
+      "p95": 34.012200019788,
+      "min": 13.214300037361681,
+      "max": 42.390699964016676,
+      "stdev": 7.433575366121457
+    },
+    "unregistered.send_to_alert_ms": {
+      "n": 30,
+      "mean": 27.86740332764263,
+      "median": 25.2551999874413,
+      "p95": 49.00429997360334,
+      "min": 17.950600013136864,
+      "max": 49.06900000059977,
+      "stdev": 8.946132509435568
+    }
+  },
+  "warning": "Single PC, loopback, one simulated sensor, bounded 25-request burst. Not a field or network-scale performance claim."
+}

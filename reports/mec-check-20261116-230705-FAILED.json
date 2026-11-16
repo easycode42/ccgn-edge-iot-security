@@ -1,0 +1,44 @@
+{
+  "mode": "etsi_mec_sandbox",
+  "platform_host": "try-mec.etsi.org",
+  "etsi_verified": false,
+  "passed": false,
+  "started": "2026-11-16T23:06:24+0900",
+  "scope": "MEC011 API interworking driven from the local CCGN host: registration, discovery and consumption of the oneM2M CSE and anomaly-alert services. Registered endpoints are loopback addresses, so this is not MEC application hosting, remote reachability, or conformance certification.",
+  "error": "activate_network_scenario: HTTP 500 (expected [200, 201]): {\"status\":500,\"detail\":\"401 Unauthorized\"}",
+  "steps": [
+    {
+      "step": "sandbox_login",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 1530.8
+    },
+    {
+      "step": "sandbox_namespace",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "step": "list_network_scenarios",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 355.1
+    },
+    {
+      "step": "activate_network_scenario",
+      "method": "POST",
+      "status": 500,
+      "ok": false,
+      "ms": 356.3
+    },
+    {
+      "step": "sandbox_logout",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 323.0
+    }
+  ]
+}

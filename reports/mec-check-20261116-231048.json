@@ -1,0 +1,183 @@
+{
+  "mode": "etsi_mec_sandbox",
+  "platform_host": "try-mec.etsi.org",
+  "etsi_verified": true,
+  "passed": true,
+  "started": "2026-11-16T23:08:40+0900",
+  "scope": "MEC011 API interworking driven from the local CCGN host: registration, discovery and consumption of the oneM2M CSE and anomaly-alert services. Registered endpoints are loopback addresses, so this is not MEC application hosting, remote reachability, or conformance certification.",
+  "network_scenario": "4g-5g-macro-v2x",
+  "app_support_version": "v2",
+  "cse_discovered_and_accessed": true,
+  "alerts_discovered_and_accessed": true,
+  "steps": [
+    {
+      "step": "sandbox_login",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 1384.9
+    },
+    {
+      "step": "sandbox_namespace",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "step": "list_network_scenarios",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 1014.0
+    },
+    {
+      "step": "activate_network_scenario",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 1244.7
+    },
+    {
+      "step": "create_app_instance:ccgn-cse",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 1002.3
+    },
+    {
+      "step": "create_app_instance:ccgn-detector",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 298.0
+    },
+    {
+      "step": "create_app_instance:ccgn-test",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 302.0
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 947.9
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 279.7
+    },
+    {
+      "step": "confirm_ready",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 277.6
+    },
+    {
+      "step": "register_service:ccgn-onem2m-cse-671905",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 299.0
+    },
+    {
+      "step": "discover_services:ccgn-onem2m-cse-671905",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 291.6
+    },
+    {
+      "step": "onem2m_retrieve_via_discovered_cse",
+      "ok": true,
+      "rsc": 2000,
+      "ms": 10.0
+    },
+    {
+      "step": "register_service:ccgn-anomaly-alert-671905",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "ms": 277.8
+    },
+    {
+      "step": "discover_services:ccgn-anomaly-alert-671905",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 279.3
+    },
+    {
+      "step": "alerts_via_discovered_service",
+      "ok": true,
+      "status": 200,
+      "alerts": 0,
+      "ms": 21.2
+    },
+    {
+      "step": "deregister_service",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 282.5
+    },
+    {
+      "step": "deregister_service",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 280.2
+    },
+    {
+      "step": "discover_services",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "ms": 286.4
+    },
+    {
+      "step": "services_removed",
+      "ok": true
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 558.2
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 294.9
+    },
+    {
+      "step": "delete_app_instance",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 294.1
+    },
+    {
+      "step": "deactivate_network_scenario",
+      "method": "DELETE",
+      "status": 204,
+      "ok": true,
+      "ms": 297.1
+    },
+    {
+      "step": "sandbox_logout",
+      "method": "POST",
+      "status": 204,
+      "ok": true,
+      "ms": 301.8
+    }
+  ]
+}

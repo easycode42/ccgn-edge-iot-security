@@ -1,0 +1,265 @@
+{
+  "dataset": "synthetic",
+  "training_seed": 42,
+  "test_seed": 2026,
+  "attack_seed": 31415,
+  "normal_samples": 600,
+  "normal_sample_interval_seconds": 1,
+  "normal_minutes": 10.0,
+  "attack_episodes": 40,
+  "warning": "Single-temperature feature; no temporal drift model. Offline scores exclude network latency. Synthetic Gaussian data; not field accuracy.",
+  "results": {
+    "rules_only": {
+      "false_alerts": 0,
+      "false_alerts_per_minute": 0.0,
+      "by_kind": {
+        "spike": {
+          "detected": 20,
+          "total": 20,
+          "mean_samples_to_first_alert": 1.0
+        },
+        "shift": {
+          "detected": 0,
+          "total": 20,
+          "mean_samples_to_first_alert": null
+        }
+      },
+      "detected_episodes": 20,
+      "episode_detection_rate": 0.5
+    },
+    "rules_plus_ai": {
+      "false_alerts": 14,
+      "false_alerts_per_minute": 1.4,
+      "by_kind": {
+        "spike": {
+          "detected": 20,
+          "total": 20,
+          "mean_samples_to_first_alert": 1.0
+        },
+        "shift": {
+          "detected": 20,
+          "total": 20,
+          "mean_samples_to_first_alert": 1.0
+        }
+      },
+      "detected_episodes": 40,
+      "episode_detection_rate": 1.0
+    }
+  },
+  "repeated": {
+    "trials": 30,
+    "seeds": "training 1000+t, normal 2000+t, attack 3000+t",
+    "normal_samples_per_trial": 600,
+    "episodes_per_kind_per_trial": 20,
+    "attack_kinds": {
+      "spike": "N(65, 0.3)",
+      "shift": "N(29, 0.3)",
+      "small_shift": "N(24.6, 0.3)",
+      "drift": "23 + 0.8 °C per sample"
+    },
+    "note": "rules_plus_ai_2consecutive is an offline what-if; the live detector runs rules_plus_ai.",
+    "summary": {
+      "rules_only": {
+        "false_alerts_per_minute": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "episode_detection_rate": {
+          "mean": 0.25,
+          "stdev": 0.0,
+          "min": 0.25,
+          "max": 0.25
+        },
+        "by_kind": {
+          "spike": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "shift": {
+            "detection_rate": {
+              "mean": 0.0,
+              "stdev": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "mean_samples_to_first_alert": null
+          },
+          "small_shift": {
+            "detection_rate": {
+              "mean": 0.0,
+              "stdev": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "mean_samples_to_first_alert": null
+          },
+          "drift": {
+            "detection_rate": {
+              "mean": 0.0,
+              "stdev": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "mean_samples_to_first_alert": null
+          }
+        }
+      },
+      "rules_plus_ai": {
+        "false_alerts_per_minute": {
+          "mean": 1.2566666666666668,
+          "stdev": 0.4107884205242178,
+          "min": 0.5,
+          "max": 2.0
+        },
+        "episode_detection_rate": {
+          "mean": 1.0,
+          "stdev": 0.0,
+          "min": 1.0,
+          "max": 1.0
+        },
+        "by_kind": {
+          "spike": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "shift": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "small_shift": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 1.5983333333333334,
+              "stdev": 0.3452843239531967,
+              "min": 1.2,
+              "max": 2.55
+            }
+          },
+          "drift": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 3.3433333333333333,
+              "stdev": 0.13628907749221195,
+              "min": 3.1,
+              "max": 3.6
+            }
+          }
+        }
+      },
+      "rules_plus_ai_2consecutive": {
+        "false_alerts_per_minute": {
+          "mean": 0.030000000000000002,
+          "stdev": 0.05349830806219241,
+          "min": 0.0,
+          "max": 0.2
+        },
+        "episode_detection_rate": {
+          "mean": 0.9883333333333333,
+          "stdev": 0.016716878386484297,
+          "min": 0.9375,
+          "max": 1.0
+        },
+        "by_kind": {
+          "spike": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "shift": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 2.0,
+              "stdev": 0.0,
+              "min": 2.0,
+              "max": 2.0
+            }
+          },
+          "small_shift": {
+            "detection_rate": {
+              "mean": 0.9533333333333334,
+              "stdev": 0.06686751354593717,
+              "min": 0.75,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 3.7915482742804723,
+              "stdev": 0.6870463546732666,
+              "min": 2.95,
+              "max": 6.066666666666666
+            }
+          },
+          "drift": {
+            "detection_rate": {
+              "mean": 1.0,
+              "stdev": 0.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "mean_samples_to_first_alert": {
+              "mean": 4.35,
+              "stdev": 0.14019690586383526,
+              "min": 4.1,
+              "max": 4.6
+            }
+          }
+        }
+      }
+    }
+  }
+}

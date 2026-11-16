@@ -1,0 +1,45 @@
+{
+  "dataset": "synthetic",
+  "training_seed": 42,
+  "test_seed": 2026,
+  "attack_seed": 31415,
+  "normal_samples": 600,
+  "normal_sample_interval_seconds": 1,
+  "normal_minutes": 10.0,
+  "attack_episodes": 40,
+  "warning": "Single-temperature feature; no temporal drift model. Offline scores exclude network latency.",
+  "results": {
+    "rules_only": {
+      "detected_episodes": 20,
+      "episode_detection_rate": 0.5,
+      "by_kind": {
+        "spike": {
+          "detected": 20,
+          "total": 20
+        },
+        "shift": {
+          "detected": 0,
+          "total": 20
+        }
+      },
+      "false_alerts": 0,
+      "false_alerts_per_minute": 0.0
+    },
+    "rules_plus_ai": {
+      "detected_episodes": 40,
+      "episode_detection_rate": 1.0,
+      "by_kind": {
+        "spike": {
+          "detected": 20,
+          "total": 20
+        },
+        "shift": {
+          "detected": 20,
+          "total": 20
+        }
+      },
+      "false_alerts": 14,
+      "false_alerts_per_minute": 1.4
+    }
+  }
+}
