@@ -14,6 +14,7 @@ class Detector:
         self.model = SensorModel()
         self.resources = None
         self.cse_url = None
+        self.mec = None             # edge_mec.MecSession, set by the runner
         self.events = queue.Queue(maxsize=10000)
         self.lock = threading.RLock()
         self.windows = defaultdict(deque)
@@ -110,6 +111,22 @@ class Detector:
                                         None if arrival is None else (enforced - arrival) * 1000,
                                     "arrival_to_verified_ms":
                                         None if arrival is None else (time.perf_counter() - arrival) * 1000})
+        self.locate_async(SENSOR, "flood")
+
+    def locate_async(self, origin, threat):
+        """Ask the MEC Location API where the offending device is attached. Runs after the block,
+        so a slow or unavailable MEC platform never delays the response."""
+        if not self.mec:
+            return
+
+        def work():
+            try:
+                where = self.mec.locate(origin)
+                if where:
+                    self.store.add("locate", {**where, "threat": threat})
+            except Exception as exc:
+                self.store.add("error", {"source": "mec-location", "message": str(exc)[:200]})
+        threading.Thread(target=work, daemon=True, name="mec-locate").start()
 
     def restore(self):
         with self.lock:

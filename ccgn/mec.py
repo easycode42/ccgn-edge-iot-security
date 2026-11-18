@@ -285,6 +285,21 @@ def local_registry():
         return jsonify([v for owner, _, v in services.values()
                         if owner == sbx and (not name or v["serName"] == name)])
 
+    # MEC013 Location API subset with two fixed UEs. Positions are made up for offline use;
+    # with --mec sandbox the real Sandbox network scenario answers instead.
+    local_users = [
+        {"address": "10.100.0.1", "zoneId": "zone01", "accessPointId": "zone01-4g-macro-cell",
+         "locationInfo": {"latitude": [43.73350], "longitude": [7.41800], "shape": 2}},
+        {"address": "10.100.0.2", "zoneId": "zone02", "accessPointId": "zone02-wifi-ap",
+         "locationInfo": {"latitude": [43.73720], "longitude": [7.42310], "shape": 2}},
+    ]
+
+    @routes("/location/v3/queries/users", methods=["GET"])
+    def location_users(sbx, mep):
+        wanted = request.args.getlist("address")
+        users = [u for u in local_users if not wanted or u["address"] in wanted]
+        return {"userList": {"resourceURL": request.base_url, "user": users}}
+
     api = "/sandbox-api/v1"
 
     @app.post(api + "/login")

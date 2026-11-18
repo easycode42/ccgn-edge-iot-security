@@ -61,6 +61,13 @@ def dashboard_app(engine, runtime_dir, root=None, cse="ACME"):
                 "events": engine.store.recent(limit=60), "sensors": engine.store.recent("sensor", 60),
                 "runtime": str(runtime_dir), "queue": engine.events.qsize()}
 
+    @app.get("/api/system")
+    def system():
+        view = getattr(app, "ccgn_system", None)
+        if view is None:
+            return {"error": "Starting up"}, 503
+        return view.snapshot()
+
     @app.get("/api/alerts")
     def alerts():
         return {"alerts": engine.store.recent("alert", 100)}

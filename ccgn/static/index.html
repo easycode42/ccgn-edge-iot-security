@@ -2,24 +2,195 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CCGN · Edge IoT Security</title>
 <style>
-:root{color-scheme:light;--bg:#f4f7fb;--panel:#ffffff;--line:#dce4ee;--muted:#52647a;--text:#172b45;--green:#087f5b;--red:#c53648;--blue:#2563eb}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,'Malgun Gothic',sans-serif;font-size:14px}main{max-width:1380px;margin:auto;padding:32px}header{display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:30px;letter-spacing:-1px;margin:5px 0}h2{font-size:16px;margin:0 0 16px}p{color:var(--muted);line-height:1.7}.tag{color:var(--green);font-size:12px;letter-spacing:2px;font-weight:700}.badge{padding:8px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--muted)}.notice{margin:22px 0;padding:13px 16px;border-left:3px solid #d99a20;background:#fff8e8;color:#765518;line-height:1.6}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 3px 14px #172b4505}.card span{color:var(--muted);font-size:12px}.card strong{display:block;font-size:28px;margin-top:8px}.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-top:16px}.panel.full{margin-top:16px}.actions{display:flex;flex-wrap:wrap;gap:8px}button{background:#f2f6fb;border:1px solid #c9d6e6;border-radius:8px;padding:10px 13px;color:var(--text);cursor:pointer;font:inherit}button.primary{background:#087f5b;border-color:#087f5b;color:#ffffff;font-weight:700}button:hover{filter:brightness(0.96)}button:disabled{opacity:.4;cursor:wait}#result{white-space:pre-wrap;min-height:44px;color:var(--muted);line-height:1.7}canvas{width:100%;height:180px}.legend{font-size:12px;color:var(--muted)}.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}.flow span{background:#edf3f9;padding:8px;border-radius:6px}.flow i{font-style:normal;color:var(--green)}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;color:var(--muted);font-weight:500}td,th{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:top}td:nth-child(4){max-width:500px;overflow-wrap:anywhere}.scroll{overflow:auto;max-height:390px}.good{color:var(--green)}.bad{color:var(--red)}footer{color:var(--muted);font-size:12px;margin-top:18px;line-height:1.7}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:7px}@media(max-width:850px){main{padding:18px}.grid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}}
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--line:#dce4ee;--muted:#52647a;--text:#172b45;--green:#087f5b;--red:#c53648;--amber:#c27a10;--blue:#2563eb;--violet:#5e4aa5;--teal:#1e8a87}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,'Malgun Gothic',sans-serif;font-size:14px}
+main{max-width:1440px;margin:auto;padding:28px}header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+h1{font-size:28px;letter-spacing:-.5px;margin:4px 0}h2{font-size:16px;margin:0 0 10px}h3{font-size:12px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p{color:var(--muted);line-height:1.6;margin:6px 0}.tag{color:var(--green);font-size:12px;letter-spacing:2px;font-weight:700}
+.badge{padding:7px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--muted);white-space:nowrap}
+.intro{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.intro div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.55;color:var(--muted)}.intro b{color:var(--text);display:block;margin-bottom:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 3px 14px #172b4505}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.grid3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px;margin-top:14px}
+svg text{font-family:system-ui,'Malgun Gothic',sans-serif}
+.node rect{fill:#fff;stroke:#b8c6d6;stroke-width:1.4;transition:stroke .2s,fill .2s}.node .t{font-size:13px;font-weight:700;fill:var(--text)}.node .s{font-size:11px;fill:var(--muted)}
+.res rect{fill:#edf3f9;stroke:#cfdbe8;transition:stroke .2s}.res .t{font-size:11.5px;font-weight:600;fill:var(--text)}.res .s{font-size:10.5px;fill:var(--muted)}
+.edge{fill:none;stroke:#c3cfdc;stroke-width:2.2;transition:stroke .25s,stroke-width .25s}.edge.on{stroke:var(--teal);stroke-width:4.5}.edge.bad{stroke:var(--red);stroke-width:4.5}.edge.warn{stroke:var(--amber);stroke-width:4.5}
+.lbl{font-size:10.5px;fill:var(--muted)}.zone{fill:#f6f9fc;stroke:#2563eb;stroke-dasharray:6 5;stroke-width:1.3}
+.hot rect{stroke:var(--teal)!important;stroke-width:2.6!important}.alarm rect{stroke:var(--red)!important;stroke-width:2.6!important;fill:#fff5f6!important}
+#trace{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.45}#trace li{display:grid;grid-template-columns:96px 170px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}#trace li span:first-child{color:var(--muted)}#trace .hop{font-weight:600}#trace .bad{color:var(--red)}#trace .ok{color:var(--green)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}button{background:#f2f6fb;border:1px solid #c9d6e6;border-radius:8px;padding:9px 12px;color:var(--text);cursor:pointer;font:inherit}button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}button:disabled{opacity:.4;cursor:wait}
+#result{min-height:22px;color:var(--muted);margin-top:10px}
+.meter{height:12px;border-radius:6px;background:#e8eef5;overflow:visible;position:relative}.meter i{display:block;height:100%;border-radius:6px;background:var(--teal);transition:width .3s}.meter b{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--red);left:50%}
+code,.mono{font-family:Consolas,'Courier New',monospace;font-size:12px;overflow-wrap:anywhere}
+.svc{display:grid;grid-template-columns:160px 112px 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.pill{padding:3px 9px;border-radius:12px;font-size:12px;font-weight:700;text-align:center}.pill.ok{background:#e3f4ec;color:var(--green)}.pill.bad{background:#fbe7ea;color:var(--red)}
+canvas{width:100%;display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;color:var(--muted);font-weight:500}td,th{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}td{overflow-wrap:anywhere}.scroll{overflow:auto;max-height:300px}
+tr.bad td{color:var(--red)}tr.good td{color:var(--green)}
+.acr{display:flex;gap:6px;flex-wrap:wrap}.acr span{background:#edf3f9;border-radius:6px;padding:3px 8px;font-size:12px}.acr span.gone{background:#fbe7ea;color:var(--red);text-decoration:line-through}
+.tree{columns:2;font-size:12px;line-height:1.7}.note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+@media(max-width:1000px){.grid2,.grid3,.intro{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body><main>
-<header><div><div class="tag">CCGN / LOCAL EDGE LAB</div><h1>IoT Anomaly Detection</h1><p style="margin:4px 0">Monitor oneM2M requests and sensor data, from detection to verified access denial.</p></div><div class="badge" id="health">Connecting…</div></header>
-<div class="notice">Live <span id="cse">oneM2M</span> CSE with simulated sensors on one PC; real-world performance is not verified.<br>MEC: <span id="mec">checking…</span></div>
-<section class="cards"><div class="card"><span>Sensor readings</span><strong id="sensors">0</strong></div><div class="card"><span>Logged requests</span><strong id="requests">0</strong></div><div class="card"><span>Alerts raised</span><strong id="alerts">0</strong></div><div class="card"><span>Temperature sensor access</span><strong id="blocked">—</strong></div></section>
-<div class="grid"><section class="panel"><h2>Run a scenario</h2><p>Each scenario starts by restoring sensor access. The flood scenario sends a bounded burst to this computer only.</p><div class="actions"><button class="primary" data-scenario="all">Run full demo</button><button data-scenario="normal">Normal traffic</button><button data-scenario="unregistered">Unknown originator</button><button data-scenario="acp">Cross-device access</button><button data-scenario="anomaly">Sensor anomaly</button><button data-scenario="flood">Request flood</button><button id="restore">Restore sensor access</button></div><div id="result" role="status" aria-live="polite">Choose a scenario to begin.</div><div class="flow"><span>Simulated sensor</span><i>→</i><span>Request logger</span><i>→</i><span id="cse2">oneM2M CSE</span><i>→</i><span>Detect · Alert · ACP</span></div></section>
-<section class="panel"><h2>Recent temperature readings</h2><canvas id="chart" aria-label="Recent temperature readings chart"></canvas><div class="legend">Green: normal · Red: rule or AI anomaly. Sensor anomalies trigger alerts, not automatic blocking.</div></section></div>
-<section class="panel full"><h2>Detection and response history</h2><div class="scroll"><table><thead><tr><th>Time</th><th>Type</th><th>Originator</th><th>Observation</th></tr></thead><tbody id="events"></tbody></table></div></section>
-<footer>AI: Isolation Forest trained on synthetic normal data · Rules: 15–40°C; more than 12 requests in 2 seconds<br>Blocking is verified by prior successful access followed by actual CSE denial (RSC 4103) after an ACP update. Identity spoofing detection and network DoS protection are outside this demo’s scope.</footer>
+<header><div><div class="tag">CCGN · EDGE IOT SECURITY ON oneM2M + ETSI MEC</div><h1>IoT Anomaly Detection at the Edge</h1>
+<p style="margin:2px 0">A detector application on the edge host watches a real oneM2M CSE, finds misbehaving devices and blocks them with oneM2M access control.</p></div>
+<div class="badge" id="health">Connecting…</div></header>
+
+<section class="intro">
+<div><b>Problem</b>IoT devices are too small to protect themselves. Sending all traffic to the cloud for analysis is slow and moves raw data off-site.</div>
+<div><b>What runs here</b>Simulated sensors talk oneM2M to a real <span class="cseName">oneM2M</span> CSE on this edge host. A detector AE analyses requests and sensor data with rules and an Isolation Forest and answers through oneM2M ACPs. Services are registered and discovered through ETSI MEC011.</div>
+<div><b>How to read this screen</b>The diagram lights up the path each request, notification, alert and access-control change actually takes. The panels below the diagram show values read live from the CSE and the MEC registry.</div>
+</section>
+
+<section class="panel"><h2>Live architecture: one edge host (oneM2M TR-0080 Option D)</h2>
+<svg id="arch" viewBox="0 0 1200 460" role="img" aria-label="Live architecture diagram">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8fa1b5"/></marker></defs>
+<rect class="zone" x="226" y="8" width="660" height="444" rx="12"/><text x="556" y="28" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#2563eb">MEC host (edge node): everything inside runs on this machine</text>
+<path id="e_temp" class="edge" d="M190 72 L248 128" marker-end="url(#arrow)"/>
+<path id="e_door" class="edge" d="M190 166 L248 150" marker-end="url(#arrow)"/>
+<path id="e_att" class="edge" d="M190 260 L248 176" marker-end="url(#arrow)"/>
+<path id="e_log_cse" class="edge" d="M410 145 L468 145" marker-end="url(#arrow)"/>
+<path id="e_log_det" class="edge" d="M330 190 L330 360 L468 360" marker-end="url(#arrow)"/>
+<path id="e_notify" class="edge" d="M575 262 L575 316" marker-end="url(#arrow)"/>
+<path id="e_alert" class="edge" d="M763 316 L763 208" marker-end="url(#arrow)"/>
+<path id="e_acp" class="edge" d="M840 316 L840 158" marker-end="url(#arrow)"/>
+<path id="e_mec_cse" class="edge" d="M866 150 L938 150" marker-end="url(#arrow)"/>
+<path id="e_mec_det" class="edge" d="M866 380 L905 380 L905 232 L938 232" marker-end="url(#arrow)"/>
+<path id="e_consumer" class="edge" d="M1062 262 L1062 326" marker-end="url(#arrow)"/>
+<text class="lbl" x="204" y="114">Mca</text><text class="lbl" x="418" y="137">Mca</text><text class="lbl" x="338" y="290">request records</text>
+<text class="lbl" x="583" y="294">notification</text><text class="lbl" x="700" y="294">alert CIN</text><text class="lbl" x="772" y="294">ACP update</text>
+<text class="lbl" x="874" y="142">Mp1</text><text class="lbl" x="910" y="300">Mp1</text><text class="lbl" x="1070" y="300">discovered URI</text>
+<g class="node" id="n_temp"><rect x="14" y="44" width="176" height="56" rx="8"/><text class="t" x="26" y="66">Temperature sensor AE</text><text class="s" x="26" y="86">Ctemp · simulated</text></g>
+<g class="node" id="n_door"><rect x="14" y="138" width="176" height="56" rx="8"/><text class="t" x="26" y="160">Door sensor AE</text><text class="s" x="26" y="180">Cdoor · simulated</text></g>
+<g class="node" id="n_att"><rect x="14" y="232" width="176" height="56" rx="8"/><text class="t" x="26" y="254">Attack tool</text><text class="s" x="26" y="274">own terminal or scenario</text></g>
+<text class="lbl" x="14" y="314">Device layer</text>
+<g class="node" id="n_log"><rect x="250" y="100" width="160" height="90" rx="8"/><text class="t" x="262" y="124">Request logger :7580</text><text class="s" x="262" y="144">edge entry point</text><text class="s" x="262" y="162">records originator,</text><text class="s" x="262" y="178">operation, CSE result</text></g>
+<g class="node" id="n_cse"><rect x="468" y="44" width="398" height="218" rx="10"/><text class="t" x="484" y="68"><tspan class="cseName">oneM2M</tspan> MN-CSE :7579 · cse-ccgn</text><text class="s" x="484" y="86">stores data · enforces ACPs · sends notifications</text></g>
+<g class="res" id="r_temp"><rect x="484" y="98" width="180" height="58" rx="6"/><text class="t" x="494" y="117">temperature/data (CNT)</text><text class="s" x="494" y="134" id="t_temp">CIN stored: –</text><text class="s" x="494" y="149">SUB detector-sub</text></g>
+<g class="res" id="r_tacp"><rect x="674" y="98" width="180" height="58" rx="6"/><text class="t" x="684" y="117">temperature-policy (ACP)</text><text class="s" x="684" y="134" id="t_tacp">–</text><text class="s" x="684" y="149">CAdmin, Cdetector: all</text></g>
+<g class="res" id="r_door"><rect x="484" y="166" width="180" height="42" rx="6"/><text class="t" x="494" y="184">door/data (CNT)</text><text class="s" x="494" y="200" id="t_door">CIN stored: –</text></g>
+<g class="res" id="r_alerts"><rect x="674" y="166" width="180" height="42" rx="6"/><text class="t" x="684" y="184">detector/alerts (CNT)</text><text class="s" x="684" y="200" id="t_alerts">alerts stored: –</text></g>
+<text class="s" x="484" y="236" style="font-size:11px;fill:#52647a">AEs Ctemp, Cdoor, Cdetector · all data stays in this CSE</text>
+<g class="node" id="n_det"><rect x="468" y="316" width="398" height="96" rx="10"/><text class="t" x="484" y="340">Detector AE (Cdetector): analysis happens here</text><text class="s" x="484" y="360">Rules: unknown originator · ACP denial · &gt;12 requests in 2 s · 15–40 °C</text><text class="s" x="484" y="378">AI: Isolation Forest on every temperature reading</text><text class="s" x="484" y="398" id="t_det">–</text></g>
+<g class="node" id="n_ui"><rect x="938" y="22" width="248" height="52" rx="8"/><text class="t" x="952" y="44">Dashboard (this page)</text><text class="s" x="952" y="62">reads the detector and the CSE</text></g>
+<g class="node" id="n_mec"><rect x="938" y="96" width="248" height="166" rx="10"/><text class="t" x="952" y="120">MEC platform · MEC011 + MEC013</text><text class="s" x="952" y="138" id="t_mecmode">service registry and discovery</text><text class="s" x="952" y="166">onem2m-cse → :7579</text><text class="s" x="952" y="184">registered by the CSE helper app</text><text class="s" x="952" y="210">anomaly-alert → :7581/api/alerts</text><text class="s" x="952" y="228">registered by the detector app</text><text class="s" x="952" y="250" id="t_loc">MEC013: where each device is attached</text></g>
+<g class="node" id="n_cons"><rect x="938" y="326" width="248" height="86" rx="8"/><text class="t" x="952" y="348">Alert consumer (MEC app)</text><text class="s" x="952" y="368">finds anomaly-alert via MEC011,</text><text class="s" x="952" y="386">then reads the alerts</text></g>
+</svg>
+<h3>What just happened, step by step (newest first)</h3>
+<ul id="trace"><li><span>–</span><span class="hop">waiting</span><span>Run a scenario or the attack tool.</span></li></ul>
+</section>
+
+<div class="grid3">
+<section class="panel"><h2>Run a scenario</h2><p>Each scenario first restores sensor access. The same attacks can be sent from a separate terminal with <code>ccgn attack flood</code>.</p>
+<div class="actions"><button class="primary" data-scenario="all">Run full demo</button><button data-scenario="normal">Normal traffic</button><button data-scenario="unregistered">Unknown originator</button><button data-scenario="acp">Cross-device access</button><button data-scenario="anomaly">Sensor anomaly</button><button data-scenario="flood">Request flood</button><button id="restore">Restore sensor access</button></div>
+<div id="result" role="status" aria-live="polite">Choose a scenario to begin.</div></section>
+
+<section class="panel"><h2>Inside the detector</h2>
+<h3 style="margin-top:0">Flood rule: Ctemp requests in the last 2 s</h3>
+<div class="meter"><i id="win"></i><b></b></div><div class="note" id="wintext">–</div>
+<h3>Isolation Forest score per reading</h3>
+<canvas id="score" height="120"></canvas><div class="note">One bar per reading the CSE notified. Below the dashed line = anomaly (red). Red outline = also outside 15–40 °C.</div></section>
+
+<section class="panel"><h2>Which service is affected</h2><p>One request per second as each device, sent straight to the CSE.</p>
+<div class="svc"><b>Ctemp → temperature/data</b><span class="pill ok" id="s_temp">–</span><canvas id="h_temp" height="34"></canvas></div>
+<div class="svc"><b>Cdoor → door/data</b><span class="pill ok" id="s_door">–</span><canvas id="h_door" height="34"></canvas></div>
+<div class="note">Bar height = response time. Red = refused by the CSE (RSC 4103). A blocked sensor loses only its own service; the other device keeps working.</div></section>
+</div>
+
+<div class="grid2">
+<section class="panel"><h2>Read from the CSE right now</h2><p>GET requests from this page to <code id="cseurl">–</code> as CAdmin.</p>
+<h3>temperature-policy (ACP): who may access temperature/data</h3><div class="acr" id="acr"></div>
+<h3>Latest CIN in temperature/data</h3><div class="mono" id="lastcin">–</div>
+<h3>Latest alert in detector/alerts (written by the detector)</h3><div class="mono" id="lastalert">–</div>
+<h3>Resource tree (discovery, fu=1)</h3><div class="tree mono" id="tree">–</div></section>
+
+<section class="panel"><h2>MEC011 service registry</h2><p id="mecnote">–</p>
+<table><thead><tr><th>Service</th><th>State</th><th>Endpoint</th><th>Used by</th></tr></thead><tbody id="svcs"></tbody></table>
+<h3>Where each device is attached (MEC013 Location API)</h3>
+<table><thead><tr><th>Device AE</th><th>UE address</th><th>Zone</th><th>Access point</th><th>Position</th></tr></thead><tbody id="locs"></tbody></table>
+<div class="note" id="etsi">–</div>
+<h3>Detection and response history</h3>
+<div class="scroll"><table><colgroup><col style="width:74px"><col style="width:76px"><col style="width:84px"><col></colgroup><thead><tr><th>Time</th><th>Type</th><th>Originator</th><th>Observation</th></tr></thead><tbody id="events"></tbody></table></div></section>
+</div>
+<p class="note">AI: Isolation Forest trained on synthetic normal data. A block counts only after a real request from the device is refused by the CSE. Identity spoofing and network-level DoS protection are outside this demo's scope.</p>
 </main><script>
-const $=id=>document.getElementById(id);let lastSensors=[];
+const $=id=>document.getElementById(id);let lastId=null,lastState=null,lastSys=null;
 async function control(path){const r=await fetch(path,{method:'POST',headers:{'X-CCGN-Control':'local-demo'}});const d=await r.json();if(!r.ok)throw Error(d.error||r.status);return d}
-document.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=async()=>{try{await control('/api/scenario/'+b.dataset.scenario);$('result').textContent='Running…';await refresh()}catch(e){$('result').textContent=e.message}});
-$('restore').onclick=async()=>{try{await control('/api/restore');$('result').textContent='Sensor access restored.';await refresh()}catch(e){$('result').textContent=e.message}};
-function draw(values){const c=$('chart'),dpr=window.devicePixelRatio||1,w=c.clientWidth,h=180;c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);let series=[...values].reverse();const min=10,max=Math.max(45,...series.map(p=>p.temperature+5));for(let v=10;v<=max;v+=10){let y=h-24-(v-min)/(max-min)*(h-40);x.strokeStyle='#dce4ee';x.beginPath();x.moveTo(32,y);x.lineTo(w,y);x.stroke();x.fillStyle='#52647a';x.font='11px system-ui';x.fillText(v+'°',0,y+4)}series.forEach((p,i)=>{const px=40+i/Math.max(series.length-1,1)*(w-55),py=h-24-(p.temperature-min)/(max-min)*(h-40);x.fillStyle=p.rule||p.ai?'#c53648':'#087f5b';x.beginPath();x.arc(px,py,4,0,Math.PI*2);x.fill()});if(!series.length){x.fillStyle='#52647a';x.fillText('Run a scenario to view readings.',45,90)}}
-function lat(r){const l=r.latency||{},f=v=>(Array.isArray(v)?Math.max(...v):v).toFixed(0)+' ms';if(l.arrival_to_enforced_ms!=null)return ' (alert '+f(l.arrival_to_alert_ms)+', blocked '+f(l.arrival_to_enforced_ms)+')';if(l.send_to_alert_ms!=null)return ' (alert '+f(l.send_to_alert_ms)+')';return ''}
-function row(e){let desc=e.message||e.action||e.scenario||e.source||'';if(e.kind==='response')desc=(e.action==='block'?'ACP block':'Access restored')+' / '+(e.verified?'Verified':'Not verified')+(e.rsc?' / RSC '+e.rsc:'');if(e.kind==='request')desc=e.method+' '+e.path+' / RSC '+e.rsc;if(e.kind==='sensor')desc=e.temperature+'°C / Rule '+e.rule+' / AI '+e.ai;if(e.kind==='scenario')desc=e.scenario+' / '+(e.passed?'Passed':'Failed');let tr=document.createElement('tr');[new Date(e.ts*1000).toLocaleTimeString('en-GB'),e.kind,e.origin||'—',desc].forEach(v=>{let td=document.createElement('td');td.textContent=v;tr.append(td)});if(e.kind==='alert'||e.kind==='error')tr.className='bad';if(e.kind==='response')tr.className=e.verified?'good':'bad';return tr}
-async function refresh(){try{const r=await fetch('/api/state');if(!r.ok)throw Error('Connection failed');const s=await r.json();$('health').textContent=s.ready?'● Running · Local demo':'Starting…';$('sensors').textContent=s.counts.sensor||0;$('requests').textContent=s.counts.request||0;$('alerts').textContent=s.counts.alert||0;$('blocked').textContent=s.blocked?'Blocked':'Allowed';$('cse').textContent=s.cse;$('cse2').textContent=s.cse+' CSE';$('mec').textContent=s.mec.startsWith('LOCAL')?'this run uses a local mock registry; ETSI Sandbox interworking not yet verified.':s.mec+'. This run itself uses the local registry.';$('blocked').className=s.blocked?'bad':'good';document.querySelectorAll('button').forEach(b=>b.disabled=!s.ready||s.scenario?.running);if(s.scenario){const q=s.scenario;$('result').textContent=q.running?'Scenario running…':q.passed?'Completed: '+q.results.map(r=>r.scenario+' ✓'+lat(r)).join(' · '):'Scenario failed: '+q.error}$('events').replaceChildren(...s.events.filter(e=>e.kind!=='sensor').slice(0,40).map(row));lastSensors=s.sensors;draw(lastSensors)}catch(e){$('health').textContent='Disconnected · Check the server window';document.querySelectorAll('button').forEach(b=>b.disabled=true)}}
-window.addEventListener('resize',()=>draw(lastSensors));refresh();setInterval(refresh,1000);
+document.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=async()=>{try{await control('/api/scenario/'+b.dataset.scenario);$('result').textContent='Running…';refresh()}catch(e){$('result').textContent=e.message}});
+$('restore').onclick=async()=>{try{await control('/api/restore');$('result').textContent='Sensor access restored.';refresh()}catch(e){$('result').textContent=e.message}};
+const timers={};
+function flash(id,cls='on',ms=1400){const el=$(id);if(!el)return;el.classList.remove('on','bad','warn');el.classList.add(cls);clearTimeout(timers[id]);timers[id]=setTimeout(()=>el.classList.remove(cls),ms)}
+function mark(id,cls,ms=1600){const el=$(id);if(!el)return;el.classList.add(cls);clearTimeout(timers[id+cls]);timers[id+cls]=setTimeout(()=>el.classList.remove(cls),ms)}
+const devEdge=o=>o==='Ctemp'?'e_temp':o==='Cdoor'?'e_door':'e_att';
+const devNode=o=>o==='Ctemp'?'n_temp':o==='Cdoor'?'n_door':'n_att';
+const t=ts=>new Date(ts*1000).toLocaleTimeString('en-GB');
+const short=ri=>(ri||'').length>16?'…'+ri.slice(-10):(ri||'');
+const ms=v=>v==null?'':` · ${v.toFixed(0)} ms`;
+function explain(e){
+ if(e.kind==='request'){const den=e.rsc===4103;return[den?'bad':'',`${e.origin||'(none)'} → logger → CSE`,`${e.method} ${e.path} → RSC ${e.rsc}${den?' (denied by ACP)':e.rsc===2001?' (CIN stored in the CSE)':''}${ms(e.duration_ms)}`]}
+ if(e.kind==='sensor'){const a=e.rule||e.ai;return[a?'bad':'ok','CSE → detector (SUB)',`notification for CIN ${short(e.ri)} · ${e.temperature} °C · range rule ${e.rule?'VIOLATED':'ok'} · Isolation Forest ${e.score.toFixed(3)} → ${a?'ANOMALY':'normal'}`]}
+ if(e.kind==='alert')return['bad','detector → CSE',`alert “${e.threat}” for ${e.origin} stored as a CIN in detector/alerts${e.detect_ms!=null?` · decided ${e.detect_ms.toFixed(0)} ms after the evidence arrived`:''}`];
+ if(e.kind==='response')return e.action==='block'?['bad','detector → CSE (ACP)',`PUT temperature-policy removes ${e.origin} · check: GET as ${e.origin} → RSC ${e.rsc} ${e.verified?'(block verified)':'(NOT verified)'}${e.arrival_to_enforced_ms!=null?` · enforced ${e.arrival_to_enforced_ms.toFixed(0)} ms after the threshold request`:''}`]:['ok','detector → CSE (ACP)',`PUT temperature-policy re-adds ${e.origin} · check: GET → RSC 2000 (access restored)`];
+ if(e.kind==='locate')return['bad','MEC013 → detector',`flood source ${e.origin} = UE ${e.address} in ${e.zone}, access point ${e.access_point}${e.lat!=null?` (${(+e.lat).toFixed(4)}, ${(+e.lon).toFixed(4)})`:''} · ${e.mode==='sandbox'?'ETSI MEC Sandbox':'local stand-in'}${ms(e.query_ms)}`];
+ if(e.kind==='scenario')return[e.passed?'ok':'bad','scenario',`${e.scenario} ${e.passed?'passed':'failed'}`];
+ if(e.kind==='mec')return['ok','MEC011','CSE registered as onem2m-cse · detector discovered it and registered anomaly-alert · consumer discovered and read it'];
+ if(e.kind==='notification_verified')return['ok','CSE → detector','subscription verification answered'];
+ if(e.kind==='error')return['bad','error',e.message||''];
+ return['',e.kind,''];
+}
+function animate(events){
+ if(!events.length)return;const top=Math.max(...events.map(e=>e.id));
+ if(lastId===null){lastId=top;return}
+ const fresh=events.filter(e=>e.id>lastId).sort((a,b)=>a.id-b.id);lastId=top;if(!fresh.length)return;
+ const list=fresh.slice(-30),step=Math.max(45,Math.min(260,900/list.length));let d=0;
+ for(const e of list){setTimeout(()=>{
+  if(e.kind==='request'){const den=e.rsc===4103;flash(devEdge(e.origin),den?'warn':'on');flash('e_log_cse',den?'bad':'on');flash('e_log_det');mark(devNode(e.origin),den?'alarm':'hot');mark('n_log','hot');if(e.path.includes('temperature'))mark('r_temp','hot')}
+  else if(e.kind==='sensor'){const a=e.rule||e.ai;flash('e_notify',a?'bad':'on');mark('r_temp','hot');mark('n_det',a?'alarm':'hot')}
+  else if(e.kind==='alert'){flash('e_alert','bad',2400);mark('r_alerts','alarm',2400);mark('n_det','alarm',2400);flash('e_consumer','on',2400)}
+  else if(e.kind==='response'){const b=e.action==='block';flash('e_acp',b?'bad':'on',3200);mark('r_tacp',b?'alarm':'hot',3200)}
+  else if(e.kind==='locate'){flash('e_mec_det','bad',3000);mark('n_mec','alarm',3000)}
+  else if(e.kind==='mec'){['e_mec_cse','e_mec_det','e_consumer'].forEach(x=>flash(x,'on',2500))}
+ },d);d+=step}
+}
+// Consecutive identical requests (a flood) collapse into one line with a count.
+function grouped(events){const out=[];for(const e of events){const k=e.kind==='request'?[e.origin,e.method,e.path,e.rsc].join('|'):null;const last=out.at(-1);if(k&&last&&last.key===k){last.n++;last.first=e}else out.push({e,key:k,n:1,first:e})}return out}
+function trace(events){const rows=grouped(events.filter(e=>e.kind!=='notification_verified')).slice(0,12);if(!rows.length)return;
+ $('trace').replaceChildren(...rows.map(g=>{const e=g.e;let[c,hop,txt]=explain(e);if(g.n>1)txt=`${g.n} × ${txt.replace(/ · \d+ ms$/,'')}`;const li=document.createElement('li');[g.n>1?`${t(g.first.ts)}–${t(e.ts).slice(-2)}`:t(e.ts),hop,txt].forEach((v,i)=>{const s=document.createElement('span');s.textContent=v;if(i===1)s.className='hop';if(i===2&&c)s.className=c;li.append(s)});return li}))}
+function row(g){const e=g.e;let[,,txt]=explain(e);if(g.n>1)txt=`${g.n} × ${txt.replace(/ · \d+ ms$/,'')}`;const tr=document.createElement('tr');[t(e.ts),e.kind,e.origin||'—',txt].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td)});if(e.kind==='alert'||e.kind==='error')tr.className='bad';if(e.kind==='response')tr.className=e.action==='block'?'bad':'good';return tr}
+function canvas(id,h){const c=$(id),dpr=devicePixelRatio||1,w=c.clientWidth;c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);return[x,w]}
+function scoreChart(sensors){const h=120,[x,w]=canvas('score',h);const s=[...sensors].reverse().slice(-40);const zero=h*0.5,scale=(h*0.45)/0.3;
+ x.strokeStyle='#c53648';x.setLineDash([4,4]);x.beginPath();x.moveTo(0,zero);x.lineTo(w,zero);x.stroke();x.setLineDash([]);x.fillStyle='#52647a';x.font='10px system-ui';x.fillText('normal ↑',4,12);x.fillText('anomaly ↓',4,h-4);
+ const bw=Math.max(4,Math.min(18,(w-60)/Math.max(s.length,1)-3));s.forEach((p,i)=>{const v=Math.max(-.3,Math.min(.3,p.score)),bx=56+i*(bw+3),y=zero-v*scale;x.fillStyle=p.ai?'#c53648':'#1e8a87';x.fillRect(bx,Math.min(y,zero),bw,Math.max(1,Math.abs(zero-y)));if(p.rule){x.strokeStyle='#c53648';x.lineWidth=2;x.strokeRect(bx-1.5,Math.min(y,zero)-1.5,bw+3,Math.abs(zero-y)+3)}});
+ if(!s.length)x.fillText('No readings yet.',60,zero-8)}
+function spark(id,arr){const h=34,[x,w]=canvas(id,h);const a=arr.slice(-40),max=Math.max(20,...a.map(p=>p.ms)),bw=Math.max(2,w/40-1);a.forEach((p,i)=>{const bh=Math.max(3,p.ms/max*(h-2));x.fillStyle=(p.rsc>=2000&&p.rsc<3000)?'#1e8a87':'#c53648';x.fillRect(i*(bw+1),h-bh,bw,bh)})}
+function svc(id,cid,arr){const last=arr.at(-1),el=$(id);if(!last){el.textContent='–';return}const ok=last.rsc>=2000&&last.rsc<3000;el.textContent=ok?`OK · ${last.ms.toFixed(0)} ms`:`DENIED · ${last.rsc}`;el.className='pill '+(ok?'ok':'bad');spark(cid,arr)}
+function system(s){
+ document.querySelectorAll('.cseName').forEach(n=>n.textContent=s.cse);$('cseurl').textContent=s.cse_url||'–';
+ if(s.error){$('lastcin').textContent=s.error;return}
+ const c=s.containers||{},p=s.policies||{};
+ $('t_temp').textContent=`CIN stored: ${c.temperature?.cni??'–'}`;$('t_door').textContent=`CIN stored: ${c.door?.cni??'–'}`;$('t_alerts').textContent=`alerts stored: ${c.alerts?.cni??'–'}`;
+ const rules=(p.temperature?.rules)||[],has=rules.some(r=>r.acor.includes('Ctemp'));
+ $('t_tacp').textContent=has?'Ctemp: create + retrieve':'Ctemp REMOVED → blocked';$('t_tacp').style.fill=has?'#52647a':'#c53648';
+ $('acr').replaceChildren(...rules.map(r=>Object.assign(document.createElement('span'),{textContent:`${r.acor.join(', ')} · acop ${r.acop}`})),...(has?[]:[Object.assign(document.createElement('span'),{className:'gone',textContent:'Ctemp · acop 3 (removed by the detector)'})]));
+ const lc=c.temperature?.latest;$('lastcin').textContent=lc?`ri ${lc.ri} · ct ${lc.ct} · con ${lc.con}`:'no CIN yet';
+ const la=c.alerts?.latest;$('lastalert').textContent=la?`ri ${la.ri} · ct ${la.ct} · ${la.alert?`${la.alert.threat} / ${la.alert.origin} / ${la.alert.message}`:la.con}`:'no alert yet';
+ $('tree').replaceChildren(...((s.tree?.uris)||[]).map(u=>Object.assign(document.createElement('div'),{textContent:u})));
+ const d=s.detector;$('win').style.width=Math.min(100,d.window_count/(d.threshold*2)*100)+'%';$('win').style.background=d.window_count>d.threshold?'#c53648':'#1e8a87';
+ $('wintext').textContent=`${d.window_count} requests in the last ${d.window_seconds} s · threshold ${d.threshold} (red line) · ${d.blocked?'Ctemp is BLOCKED':'Ctemp allowed'}`;
+ $('t_det').textContent=d.blocked?'State: Ctemp blocked through its ACP':'State: watching';$('t_det').style.fill=d.blocked?'#c53648':'#52647a';
+ svc('s_temp','h_temp',s.health?.Ctemp||[]);svc('s_door','h_door',s.health?.Cdoor||[]);
+ const m=s.mec||{};$('mecnote').textContent=m.reachable?`Live from ${m.platform}: GET /services and /queries/users.`:'MEC platform not reachable.';
+ const used={'onem2m-cse':'detector: Mca to the discovered URI','anomaly-alert':'alert consumer app'};
+ $('t_mecmode').textContent=m.mode==='sandbox'?'this run: ETSI MEC Sandbox':'this run: local stand-in :7582';
+ const blocked=s.detector?.blocked,locs=m.locations||{};
+ $('locs').replaceChildren(...Object.entries(m.ue||{}).map(([dev,addr])=>{const l=locs[dev]||{};const tr=document.createElement('tr');if(blocked&&dev==='Ctemp')tr.className='bad';[dev,addr||'—',l.zone||'—',l.access_point||'—',l.lat!=null?`${(+l.lat).toFixed(4)}, ${(+l.lon).toFixed(4)}`:'—'].forEach(x=>{const td=document.createElement('td');td.textContent=x;tr.append(td)});return tr}));
+ $('svcs').replaceChildren(...(m.services||[]).map(v=>{const tr=document.createElement('tr');[v.name,v.state,v.endpoint,used[v.name]||'—'].forEach(x=>{const td=document.createElement('td');td.textContent=x;tr.append(td)});return tr}));
+}
+async function refresh(){try{const[r1,r2]=await Promise.all([fetch('/api/state'),fetch('/api/system')]);if(!r1.ok)throw Error('Connection failed');const st=await r1.json();lastState=st;
+ $('health').textContent=st.ready?`● Running · ${st.cse} CSE`:'Starting…';
+ $('etsi').textContent='Earlier ETSI MEC Sandbox check: '+st.mec;
+ document.querySelectorAll('button').forEach(b=>b.disabled=!st.ready||st.scenario?.running);
+ if(st.scenario){const q=st.scenario;$('result').textContent=q.running?'Scenario running…':q.passed?'Completed: '+q.results.map(r=>r.scenario+' ✓').join(' · '):'Scenario failed: '+q.error}
+ animate(st.events);trace(st.events);$('events').replaceChildren(...grouped(st.events.filter(e=>e.kind!=='sensor')).slice(0,40).map(row));scoreChart(st.sensors);
+ if(r2.ok){lastSys=await r2.json();system(lastSys)}
+}catch(e){$('health').textContent='Disconnected · check the server window';document.querySelectorAll('button').forEach(b=>b.disabled=true)}}
+addEventListener('resize',()=>{if(lastState)scoreChart(lastState.sensors);if(lastSys)system(lastSys)});refresh();setInterval(refresh,1000);
 </script></body></html>

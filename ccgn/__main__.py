@@ -48,7 +48,7 @@ def start_cse(kind, run_dir, log):
     return subprocess.Popen(command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env)
 
 
-def run(cse="acme"):
+def run(cse="acme", mec_mode="local"):
     from .detector import Detector
     from .mec import MecClient, local_registry
     from .server import dashboard_app, logger_app, serve
@@ -62,6 +62,7 @@ def run(cse="acme"):
     log = open(run_dir / f"{cse}-process.log", "w", encoding="utf-8")
     child = None
     servers = []
+    mec_session = None
     try:
         child = start_cse(cse, run_dir, log)
         for _ in range(120):
@@ -79,30 +80,40 @@ def run(cse="acme"):
         ui = dashboard_app(engine, run_dir, ROOT, name)
         servers.extend([serve(ui, 7581), serve(logger_app(engine), 7580), serve(local_registry(), 7582)])
         engine.resources = provision()
-        mec = MecClient()
-        mec.ready("cse-app")
-        mec.register("cse-app", "onem2m-cse", CSE_URL)
-        mec.ready("detector-app")
+        from .edge_mec import MecSession
+        mec = MecSession(mec_mode)
+        mec_session = mec
+        mec.start()
+        # MEC011: the CSE helper app publishes the CSE; the detector app finds it there and uses
+        # the discovered URI for every oneM2M request it sends from now on.
+        mec.register("ccgn-cse", "onem2m-cse", CSE_URL, "oneM2M")
         engine.cse_url = mec.discover("onem2m-cse")
         checked(call("GET", BASE + "/temperature/data", DETECTOR, base=engine.cse_url))
         subscribe(engine.resources)
-        mec.register("detector-app", "anomaly-alert", UI_URL + "/api/alerts")
-        mec.ready("test-app")
+        engine.mec = mec
+        from .live import SystemView
+        ui.ccgn_system = SystemView(engine, name, mec)
+        ui.ccgn_system.start_probe()
+        mec.register("ccgn-detector", "anomaly-alert", UI_URL + "/api/alerts", "Security")
         endpoint = mec.discover("anomaly-alert")
         requests.get(endpoint, timeout=5).raise_for_status()
-        store.add("mec", {"mode": "local_mock", "cse": name, "cse_discovered_and_accessed": True,
-                           "alert_discovered_and_accessed": True, "etsi_verified": False})
+        store.add("mec", {"mode": mec_mode, "platform": mec.describe(), "cse": name,
+                          "cse_discovered_and_accessed": True, "alert_discovered_and_accessed": True,
+                          "devices_paired_with_ue": mec.ue, "etsi_verified": mec_mode == "sandbox"})
         ui.ccgn_state["ready"] = True
         (runtime / "latest.json").write_text(json.dumps({"directory": str(run_dir), "cse": name}),
                                              encoding="utf-8")
         from .mec_check import latest_status
         print(f"CCGN ready: {UI_URL}\noneM2M CSE: {name} at {CSE_URL}\n"
-              f"MEC in this run: local contract double. Real platform: {latest_status(ROOT)}\n"
+              f"MEC in this run: {mec.describe()}\nDevices paired with MEC UEs: {mec.ue}\n"
+              f"Earlier ETSI check: {latest_status(ROOT)}\n"
               f"Evidence: {run_dir}\nCtrl+C to stop.", flush=True)
         while child.poll() is None:
             time.sleep(0.5)
         raise RuntimeError(f"{name} process exited unexpectedly")
     finally:
+        if mec_session:
+            mec_session.close()       # removes the services, app instances and scenario it created
         for server in servers:
             server.close()
         if child and child.poll() is None:
@@ -137,9 +148,15 @@ def demo():
 
 def main():
     parser = argparse.ArgumentParser(description="CCGN local edge security demonstrator")
-    parser.add_argument("command", choices=["run", "demo", "benchmark", "evaluate", "mec-check", "package"])
+    parser.add_argument("command", choices=["run", "demo", "attack", "benchmark", "evaluate", "mec-check",
+                                            "package"])
+    parser.add_argument("attack", nargs="?", choices=["flood", "unregistered", "cross", "anomaly", "normal"],
+                        help="attack: which misbehaviour to send from this terminal")
+    parser.add_argument("--count", type=int, default=40, help="attack flood: number of requests (max 200)")
     parser.add_argument("--cse", choices=sorted(CSE_NAMES), default=os.environ.get("CCGN_CSE", "acme"),
                         help="run: which oneM2M CSE to start (tinyiot needs Linux / WSL)")
+    parser.add_argument("--mec", choices=["local", "sandbox"], default=os.environ.get("CCGN_MEC", "local"),
+                        help="run: MEC platform for this run (sandbox = real ETSI MEC Sandbox, GitHub login)")
     parser.add_argument("--runs", type=int, default=20, help="benchmark: repetitions per scenario")
     parser.add_argument("--trials", type=int, default=30, help="evaluate: repeated trials with new seeds")
     parser.add_argument("--sandbox", action="store_true",
@@ -148,12 +165,17 @@ def main():
                         help="mec-check: same flow against the local double (not ETSI evidence)")
     args = parser.parse_args()
     if args.command == "run":
-        run(args.cse)
+        run(args.cse, args.mec)
     elif args.command == "demo":
         demo()
     elif args.command == "evaluate":
         from .evaluate import evaluate
         evaluate(ROOT, args.trials)
+    elif args.command == "attack":
+        from .attack import attack
+        if not args.attack:
+            parser.error("attack needs one of: flood, unregistered, cross, anomaly, normal")
+        attack(args.attack, args.count)
     elif args.command == "benchmark":
         from .benchmark import benchmark
         benchmark(ROOT, args.runs)
