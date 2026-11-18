@@ -1,0 +1,22 @@
+﻿{
+    "slide_title":  6.6,
+    "slide_problem":  16.63,
+    "slide_onem2m":  20.56,
+    "slide_mec":  20.12,
+    "slide_flow":  18.7,
+    "slide_dashboard":  8.77,
+    "rec_overview":  18.1,
+    "rec_mec":  17.5,
+    "rec_normal":  11.79,
+    "rec_unregistered":  12.78,
+    "rec_cross":  9.1,
+    "rec_anomaly":  14.56,
+    "rec_flood":  18.17,
+    "rec_evidence":  8.04,
+    "rec_location":  11.28,
+    "rec_restore":  5.53,
+    "slide_latency":  13.46,
+    "slide_ai":  14.1,
+    "slide_etsi":  9.95,
+    "slide_close":  12.49
+}

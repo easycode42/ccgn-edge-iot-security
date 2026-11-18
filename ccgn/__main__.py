@@ -19,6 +19,10 @@ ROOT = Path(__file__).resolve().parent.parent
 def free_ports():
     for port in (7579, 7580, 7581, 7582):
         with socket.socket() as sock:
+            if os.name != "nt":
+                # Linux keeps a just-closed port in TIME_WAIT; that is not "in use". (On Windows this
+                # option would also allow binding over a live listener, so it is not set there.)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 sock.bind(("127.0.0.1", port))
             except OSError:
@@ -114,6 +118,11 @@ def run(cse="acme", mec_mode="local"):
     finally:
         if mec_session:
             mec_session.close()       # removes the services, app instances and scenario it created
+            done = [f"{s['step']} {s.get('status', '')}".strip() for s in mec_session.trace.steps
+                    if s["step"] in ("deregister_service", "delete_app_instance", "deactivate_network_scenario",
+                                     "sandbox_logout")]
+            if done:
+                print("MEC clean-up: " + ", ".join(done), flush=True)
         for server in servers:
             server.close()
         if child and child.poll() is None:

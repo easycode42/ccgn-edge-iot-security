@@ -1,0 +1,67 @@
+{
+  "kind": "live_edge_demo_on_etsi_mec_sandbox",
+  "recorded": "2026-11-18T15:37:27+0900",
+  "cse": "tinyIoT",
+  "mec_platform": "ETSI MEC Sandbox (https://try-mec.etsi.org, scenario 4g-5g-macro-v2x, mep1)",
+  "devices_paired_with_ue": {
+    "Cdoor": "10.1.0.2",
+    "Ctemp": "10.1.0.1"
+  },
+  "device_locations_at_record_time": {
+    "Cdoor": {
+      "access_point": "4g-macro-cell-3",
+      "address": "10.1.0.2",
+      "lat": 43.732403,
+      "lon": 7.4187,
+      "zone": "zone01"
+    },
+    "Ctemp": {
+      "access_point": "4g-macro-cell-6",
+      "address": "10.1.0.1",
+      "lat": 43.736515,
+      "lon": 7.421802,
+      "zone": "zone03"
+    }
+  },
+  "mec_services_listed_by_the_platform": [
+    "anomaly-alert",
+    "mep1-mec012-1",
+    "mep1-mec013-1",
+    "mep1-mec015-1",
+    "mep1-mec016-1",
+    "mep1-mec028-1",
+    "mep1-mec030-1",
+    "onem2m-cse"
+  ],
+  "flood_blocks": [
+    {
+      "rsc": 4103,
+      "verified": true,
+      "acp_update_ms": 33.21054900879972,
+      "arrival_to_enforced_ms": 99.60007200425025
+    }
+  ],
+  "flood_source_lookups": [
+    {
+      "origin": "Ctemp",
+      "address": "10.1.0.1",
+      "zone": "zone03",
+      "access_point": "4g-macro-cell-6",
+      "lat": 43.736515,
+      "lon": 7.421802,
+      "mode": "sandbox",
+      "query_ms": 1053.2596230041236
+    }
+  ],
+  "event_counts": {
+    "alert": 32,
+    "locate": 6,
+    "mec": 1,
+    "notification_verified": 1,
+    "request": 225,
+    "response": 21,
+    "scenario": 5,
+    "sensor": 40
+  },
+  "scope": "Single PC: tinyIoT, detector and dashboard ran locally (WSL2); MEC011 registry/discovery and MEC013 location were the real ETSI MEC Sandbox. Service endpoints registered are loopback addresses. Device-to-UE pairing is a demo assignment, not a real radio attachment of the simulated sensors."
+}

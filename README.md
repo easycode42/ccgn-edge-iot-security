@@ -26,13 +26,52 @@ the same report file.
 
 ## Presentation and demo video
 
-- [`deliverables/CCGN_Final_Report.pptx`](deliverables/CCGN_Final_Report.pptx) — final report, 12 slides with speaker notes.
-- [`deliverables/CCGN_Demo.mp4`](deliverables/CCGN_Demo.mp4) — 2 min 12 s captioned walkthrough (no audio): summary slides,
-  a screen recording of all five scenarios on the live dashboard, then the measured results.
+- [`deliverables/CCGN_Final_Report.pptx`](deliverables/CCGN_Final_Report.pptx) — final report, 17 slides with speaker notes: what we set out to do, use case, how oneM2M is used, how oneM2M and MEC work together, data path, flood walk-through, dashboard, demo, results, limits.
+- [`deliverables/CCGN_Demo.mp4`](deliverables/CCGN_Demo.mp4) — 4 min 44 s narrated video: problem and goal, how oneM2M
+  and MEC are used, the data path, then a recording of the live dashboard on tinyIoT and the ETSI MEC Sandbox with
+  attacks sent from a separate terminal, then the measured results. The narration is synthesised locally from
+  [`tools/narration.json`](tools/narration.json) with the Windows voice; replace any clip in
+  `deliverables/narration/` with your own recording and rerun `tools/make_video.py`.
 
-Both are generated from the repository: `tools/record_demo.mjs` drives and records the running dashboard,
-`tools/build_deck.js` builds the deck from `reports/*.json`, `tools/render_slides.ps1` and `tools/make_video.ps1`
-assemble the video (Node 22+, PowerPoint and ffmpeg required for these tools only).
+Both are generated from the repository: `tools/make_narration.ps1` (narration), `tools/record_walkthrough.mjs`
+(drives and records the running dashboard and the attack tool), `tools/build_deck.js` (deck from `reports/*.json`),
+`tools/render_slides.ps1` and `tools/make_video.py` (video). Node 22+, PowerPoint and ffmpeg are needed for these
+tools only.
+
+## How the demo explains itself
+
+The dashboard (http://127.0.0.1:7581) is built to show *how* the system works, not only that it works:
+
+- **Live architecture** — every request, notification, alert and ACP change lights up the path it actually takes
+  (device → request logger → CSE → subscription → detector → alert CIN / ACP update → MEC), with a step-by-step
+  list in words underneath.
+- **Read from the CSE right now** — the dashboard sends real oneM2M GETs (as `CAdmin`) to the CSE: the ACP rules of
+  `temperature-policy` (the `Ctemp` rule disappears when it is blocked), the latest CIN, the alerts stored by the
+  detector, and the resource tree via discovery.
+- **Inside the detector** — the flood window (requests in the last 2 s vs. the threshold of 12) and the Isolation
+  Forest score of every reading.
+- **Which service is affected** — one request per second as each device, straight to the CSE: during a flood only
+  `Ctemp → temperature/data` is refused; `Cdoor → door/data` keeps working.
+- **MEC panel** — the MEC011 service registry (on the Sandbox, next to the platform's own services) and the
+  MEC013 location of each device.
+
+Attacks can be sent from a **separate terminal**, independent of the page:
+
+```powershell
+wsl --cd "$PWD" -- bash tools/ccgn_wsl.sh attack flood        # also: unregistered, cross, anomaly, normal
+```
+
+To run the whole demo on the **real ETSI MEC Sandbox** (MEC011 registry/discovery and MEC013 location):
+
+```powershell
+wsl --cd "$PWD" -- bash tools/ccgn_wsl.sh run --mec sandbox   # prints a GitHub device code; ~2-3 min to start
+```
+
+Each simulated device AE is paired with one UE of the Sandbox network scenario. After a flood block the detector
+asks the MEC013 location API where that UE is attached. On 2026-11-18 this returned `Ctemp = UE 10.1.0.1, zone03,
+4g-macro-cell-6` ([`reports/edge-demo-sandbox-20261118-153727.json`](reports/edge-demo-sandbox-20261118-153727.json)).
+The pairing is an assignment for the demo: the simulated sensors have no radio of their own. Stop the run with
+`Ctrl+C`; it removes the services, app instances and scenario it created on the Sandbox.
 
 ## Quick start with ACME (Windows, Python 3.12, Git)
 

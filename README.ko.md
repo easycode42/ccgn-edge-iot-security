@@ -19,10 +19,25 @@ ETSI 관련 주장은 통과 기록이 보여 주는 범위(loopback 주소로 �
 
 ## 발표자료와 데모 영상
 
-- `deliverables/CCGN_Final_Report.pptx` — 영어 최종 발표자료 12장(발표자 노트 포함)
-- `deliverables/CCGN_Demo.mp4` — 2분 12초 자막 영상(음성 없음): 요약 슬라이드 → 대시보드에서 시나리오 5개 실행 녹화 → 측정 결과
+- `deliverables/CCGN_Final_Report.pptx` — 영어 최종 발표자료 17장(발표자 노트 포함): 목표 → 사용 시나리오 → oneM2M 활용 → MEC 연동 → 데이터 흐름 → flood 때 일어나는 일 → 대시보드 → 데모 → 결과
+- `deliverables/CCGN_Demo.mp4` — 4분 44초 내레이션 영상: 문제·목표 → oneM2M 활용 → MEC 연동 → 데이터 흐름 → 실제 Sandbox 연결 대시보드 녹화(공격은 별도 터미널) → 결과. 음성은 Windows 기본 음성(Zira)으로 로컬 합성했고, 대본은 `tools/narration.json`입니다. `deliverables/narration/`의 wav를 직접 녹음한 것으로 바꾸고 `tools/make_video.py`를 다시 실행하면 됩니다.
 
 둘 다 `tools/` 스크립트로 다시 만들 수 있습니다. 발표자료의 숫자는 `reports/*.json`에서 직접 읽습니다.
+
+## 데모가 보여주는 것 (11/18 교수님 피드백 반영)
+
+대시보드는 "동작한다"가 아니라 **"어떻게 동작하는지"**를 보여주도록 바꿨습니다.
+
+- **실시간 아키텍처:** 요청·알림·경고·ACP 변경이 실제로 지나가는 경로에 불이 들어오고, 아래에 단계별 설명이 나옵니다.
+- **CSE에서 지금 읽은 값:** 대시보드가 CSE에 직접 GET을 보내 ACP 규칙(차단 시 Ctemp 규칙이 사라짐), 최근 CIN, 탐지기가 저장한 경고, 리소스 트리를 보여줍니다.
+- **탐지기 내부:** 2초 창 요청 수 vs 임계값 12, 센서값마다 Isolation Forest 점수.
+- **영향받는 서비스:** 기기마다 초당 1회 CSE에 요청. 폭주 시 Ctemp의 온도 서비스만 거부되고 Cdoor는 정상.
+- **MEC 패널:** MEC011 서비스 목록과 MEC013 기기 위치.
+
+공격은 **별도 터미널**에서 보낼 수 있습니다: `wsl --cd "$PWD" -- bash tools/ccgn_wsl.sh attack flood` (unregistered, cross, anomaly, normal도 가능)
+
+**실제 ETSI MEC Sandbox로 데모 전체 실행:** `wsl --cd "$PWD" -- bash tools/ccgn_wsl.sh run --mec sandbox`
+GitHub 코드를 입력하면 2~3분 뒤 뜹니다. 폭주 차단 후 MEC013 위치 API로 발생 위치를 조회하며, 11/18 실행에서는 `Ctemp = UE 10.1.0.1, zone03, 4g-macro-cell-6`이었습니다(`reports/edge-demo-sandbox-20261118-153727.json`). 기기-UE 짝은 데모용 배정입니다. `Ctrl+C`로 끄면 Sandbox에 만든 것을 정리합니다.
 
 ## tinyIoT로 실행하기 (WSL)
 
