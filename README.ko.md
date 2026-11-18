@@ -29,7 +29,7 @@ ETSI 관련 주장은 통과 기록이 보여 주는 범위(loopback 주소로 �
 tinyIoT는 Linux용 C 서버이고, CSE가 탐지기에 알림을 보내려면 같은 쪽에 있어야 해서 이 모드에서는 CCGN 전체가 WSL 안에서 실행됩니다. 대시보드는 그대로 Windows 브라우저에서 http://127.0.0.1:7581 로 엽니다.
 
 1. 최초 1회: `wsl --cd <이 폴더> -- bash tools/setup_tinyiot.sh` (tinyIoT 빌드와 Python 환경 생성, 관리자 권한 불필요). 이 PC에는 이미 되어 있습니다.
-2. 실행: **`start-tinyiot.ps1`**
+2. 실행: **`실행-tinyiot.cmd`** 더블클릭 (또는 `start-tinyiot.ps1`)
 3. 다른 명령: `wsl --cd <이 폴더> -- bash tools/ccgn_wsl.sh demo` (demo, benchmark, mec-check 등)
 
 ACME와 다른 점: tinyIoT에는 AE 등록 허용 목록이 없어서 미등록 ID도 자기 AE는 만들 수 있습니다. 남의 데이터 접근은 두 CSE 모두 ACP로 거부(4103)되며, 미등록 접근 시나리오는 이 거부를 확인합니다.
