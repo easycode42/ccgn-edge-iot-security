@@ -70,7 +70,9 @@ never leaves the host.
 The false-alarm target is not met by the deployed rules + AI setting; the offline two-in-a-row filter
 meets it and is the next step.
 
-[image: deliverables/slides/slide-05.png — How oneM2M and MEC work together]
+[image: deliverables/architecture-as-built.png — architecture as built, paths 1–8]
+
+[image: deliverables/slides/slide-06.png — how oneM2M and MEC work together: the MEC011 and MEC013 calls]
 
 ## 2. Prerequisites
 

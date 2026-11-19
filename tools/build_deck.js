@@ -160,6 +160,68 @@ async function crop(dir, file, left, top, width, height) {
     { x: 0.45, y: 4.7, w: 9.1, h: 0.4, fontSize: 12, italic: true, color: C.text2 });
 
   pres.addSection({ title: "Design" });
+  // ── As-built architecture (same visual language as the interim report's slide 5) ──
+  s = content("Design", "Architecture as built (Option D, one edge node)",
+    "This is the system as it was finally built. On the left, the device layer: two simulated sensor AEs and the attack tool, " +
+    "which runs in its own terminal. Everything in the dashed box runs on one MEC host. Path 1: devices talk oneM2M to the request " +
+    "logger, the edge entry point, which forwards to tinyIoT, path 2, and hands a record of every request to the detector, path 3. " +
+    "Path 4: tinyIoT notifies the detector of every new reading. Path 5: the detector answers with oneM2M requests, an alert content " +
+    "instance or an ACP update. Paths 6 and 7 go to the MEC platform: the CSE is registered as a MEC011 service, the detector " +
+    "discovers it, publishes its alert service and asks MEC013 where a device is attached. Path 8: a consumer app discovers the " +
+    "alert service. Compared with the interim plan, tinyIoT replaced ACME as the main CSE, the dashboard is Flask instead of " +
+    "Streamlit, the humidity sensor was dropped, and the cloud IN-CSE stretch goal was not built.");
+  const box = (x, y, w, h, title, sub, line, fill = H.lt1, dash) => {
+    s.addShape(pres.ShapeType.roundRect, { x, y, w, h, rectRadius: 0.06, fill: { color: fill },
+      line: { color: line, width: 1.25, ...(dash ? { dashType: "dash" } : {}) }, objectName: title });
+    text(s, title, { x: x + 0.08, y: y + 0.06, w: w - 0.16, h: 0.24, fontSize: 11, bold: true, color: C.text1 });
+    if (sub) text(s, sub, { x: x + 0.08, y: y + 0.3, w: w - 0.16, h: h - 0.34, fontSize: 8.5, color: C.text2 });
+  };
+  const arrow = (x, y, w, h, color, opts = {}) => s.addShape(pres.ShapeType.line, { x, y, w, h,
+    line: { color, width: 1.6, endArrowType: "triangle", ...(opts.both ? { beginArrowType: "triangle" } : {}), ...(opts.dash ? { dashType: "dash" } : {}) },
+    flipH: !!opts.flipH, flipV: !!opts.flipV });
+  // device layer
+  s.addShape(pres.ShapeType.roundRect, { x: 0.3, y: 1.05, w: 1.75, h: 3.75, rectRadius: 0.05, fill: { color: "F3F6F8" }, line: { color: "D5DFE0", width: 1 } });
+  text(s, "Device layer", { x: 0.3, y: 1.1, w: 1.75, h: 0.25, fontSize: 11, bold: true, color: C.text1, align: "center" });
+  text(s, "simulated oneM2M AEs", { x: 0.3, y: 1.33, w: 1.75, h: 0.2, fontSize: 8, color: C.text2, align: "center" });
+  box(0.42, 1.6, 1.5, 0.5, "Temperature AE", "Ctemp", H.accent1);
+  box(0.42, 2.2, 1.5, 0.5, "Door AE", "Cdoor", H.accent1);
+  box(0.42, 2.9, 1.5, 1.75, "Attack tool", "own terminal:\n• unknown originator\n• cross-device read\n• abnormal values\n• request flood", H.accent2, "FDF2F2");
+  // MEC host
+  s.addShape(pres.ShapeType.roundRect, { x: 2.25, y: 1.05, w: 5.25, h: 3.75, rectRadius: 0.04, fill: { color: "F6F9FC" },
+    line: { color: H.accent5, width: 1.25, dashType: "dash" }, objectName: "MEC host" });
+  text(s, "MEC host (one edge node)", { x: 2.25, y: 1.09, w: 5.25, h: 0.24, fontSize: 11, bold: true, color: C.accent5, align: "center" });
+  box(2.4, 1.5, 1.2, 1.15, "Request logger", "edge entry point\nrecords originator, operation, CSE result", H.accent3, "FFF8EC");
+  box(3.95, 1.42, 3.4, 1.35, "MEC app 1: tinyIoT MN-CSE", null, H.dk1);
+  ["AE", "CNT", "CIN", "SUB", "ACP"].forEach((r, i) => {
+    s.addShape(pres.ShapeType.roundRect, { x: 4.07 + i * 0.64, y: 1.78, w: 0.56, h: 0.32, rectRadius: 0.04,
+      fill: { color: r === "ACP" ? "FCEFD9" : "E5EEF7" }, line: { color: r === "ACP" ? "FCEFD9" : "E5EEF7", width: 0 } });
+    text(s, r, { x: 4.07 + i * 0.64, y: 1.78, w: 0.56, h: 0.32, fontSize: 9, bold: true, color: C.text1, align: "center", valign: "middle" });
+  });
+  text(s, "stores data · enforces ACPs · sends notifications\nservice-producing MEC app (onem2m-cse)", { x: 4.05, y: 2.18, w: 3.2, h: 0.5, fontSize: 8.5, italic: true, color: C.text2 });
+  box(3.95, 3.0, 3.05, 0.82, "MEC app 2: Detector AE (Cdetector)", "rules + Isolation Forest → alert CIN · ACP update\nafter a block: asks MEC013 where the device is", H.accent4, "F5F2FB");
+  box(2.4, 4.05, 4.95, 0.62, "MEC platform: ETSI MEC Sandbox (local stand-in offline)", "MEC011 service registry and discovery · MEC013 location API", H.accent5, "EEF4FB");
+  // right column
+  box(7.7, 1.05, 2.0, 0.98, "Dashboard (Flask)", "live architecture, CSE readouts, service status, MEC panel", H.accent1, "EEF7F6");
+  box(7.7, 2.2, 2.0, 0.82, "Alert consumer", "MEC app: discovers anomaly-alert, reads alerts", H.accent1);
+  box(8.1, 4.05, 1.6, 0.62, "Cloud IN-CSE", "stretch goal: not built", "A6B4B8", "FFFFFF", true);
+  // paths
+  arrow(1.92, 1.85, 0.48, 0.15, H.dk1); arrow(1.92, 2.45, 0.48, 0.0, H.dk1, { flipV: true });
+  arrow(1.92, 2.5, 0.48, 0.75, H.accent2, { flipV: true, dash: true });
+  num(1, 2.03, 1.53, H.dk1);
+  arrow(3.6, 1.95, 0.35, 0, H.dk1); num(2, 3.65, 1.62, H.dk1);
+  arrow(3.0, 2.65, 0, 0.75, H.accent3); arrow(3.0, 3.4, 0.95, 0, H.accent3); num(3, 2.72, 2.95, H.accent3);
+  arrow(4.6, 2.77, 0, 0.23, H.accent4); num(4, 4.25, 2.78, H.accent4);
+  arrow(5.9, 2.77, 0, 0.23, H.accent2, { flipV: true }); num(5, 6.0, 2.78, H.accent2);
+  arrow(7.18, 2.77, 0, 1.28, H.accent5); num(6, 7.08, 2.8, H.accent5);
+  arrow(5.2, 3.82, 0, 0.23, H.accent5, { both: true }); num(7, 5.3, 3.8, H.accent5);
+  arrow(7.35, 1.6, 0.35, 0, H.accent1); 
+  arrow(7.35, 4.36, 0.6, 0, H.accent1, { both: true }); arrow(7.95, 3.02, 0, 1.34, H.accent1, { flipV: true }); num(8, 7.62, 3.5, H.accent1);
+  text(s, [
+    { text: "Mca: ", options: { bold: true } }, { text: "1 device requests  2 forward  4 notification  5 alert CIN + ACP update     " },
+    { text: "Logger: ", options: { bold: true, color: C.accent3 } }, { text: "3 request records     " },
+    { text: "Mp1: ", options: { bold: true, color: C.accent5 } }, { text: "6 MEC011 register  7 MEC011 discover + MEC013 location  8 consumer discovery" },
+  ], { x: 0.3, y: 4.92, w: 9.4, h: 0.28, fontSize: 8.5, color: C.text1 });
+
   // ── 4. How we use oneM2M ─────────────────────────────────────────────────
   s = content("Design", "How we use oneM2M",
     "Everything that touches data goes through oneM2M. Each sensor and the detector register as AEs; the registered list is how " +

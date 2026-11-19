@@ -13,9 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 D = ROOT / "deliverables"
 PAD = 0.9                      # seconds of picture after each narrated slide
-INTRO = [("slide_title", 1), ("slide_problem", 2), ("slide_onem2m", 4), ("slide_mec", 5), ("slide_flow", 6),
-         ("slide_dashboard", 8)]
-OUTRO = [("slide_latency", 12), ("slide_ai", 13), ("slide_etsi", 14), ("slide_close", 17)]
+INTRO = [("slide_title", 1), ("slide_problem", 2), ("slide_onem2m", 5), ("slide_mec", 6), ("slide_flow", 4),
+         ("slide_dashboard", 9)]
+OUTRO = [("slide_latency", 13), ("slide_ai", 14), ("slide_etsi", 15), ("slide_close", 18)]
 
 
 def main():
