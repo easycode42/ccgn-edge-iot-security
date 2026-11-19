@@ -4,6 +4,12 @@ Draft text for the hackster.io project page, in the section order of the oneM2M 
 (as used by the ESTIMED Hackathon #1 entries). Paste section by section; replace the image
 placeholders with the files named in brackets.
 
+The 2026 competition runs together with ESTIMED Hackathon #2. The ESTIMED #1 rubric scored: use case and
+the justification for oneM2M–MEC interworking, requirements and measurable KPIs with a baseline,
+architecture mapped to a deployment option, a working and reproducible prototype using standard APIs,
+and documentation with use-case workflow, architecture, sequence flows and API usage. The sections below
+cover each of these.
+
 ---
 
 **Title:** CCGN: Edge AI anomaly detection for IoT devices on oneM2M (tinyIoT) and ETSI MEC
@@ -39,7 +45,30 @@ sensor is compromised: it floods requests, sends abnormal values and tries to re
    ACP, and the CSE itself refuses it from then on.
 5. **Locate with MEC:** the MEC013 location API returns the device's zone and cell. Other devices keep working.
 
-Deployment follows oneM2M TR-0080 **Option D**: the CSE and the detector are both applications on the MEC host.
+**Why oneM2M and MEC together.** oneM2M alone gives a standard data model and access control, but no
+standard way for edge applications to find each other or to learn where a device is attached. MEC alone
+gives edge compute and network information, but no common IoT data model or device access control. CCGN
+needs both: the detector reads devices through oneM2M, blocks them through oneM2M ACPs, finds the CSE
+through MEC011, and locates the offending device through MEC013.
+
+Deployment follows oneM2M TR-0080 **Option D**: the CSE and the detector are both applications on the MEC
+host. We chose D because detection, blocking and the data all stay on one edge node: the reaction loop
+never leaves the host.
+
+**Requirements and KPIs**
+
+| Requirement | KPI | Target | Measured (tinyIoT, one PC, 30 runs) | Baseline |
+|---|---|---|---|---|
+| Stop a flooding device quickly | threshold request → block enforced by the CSE | < 100 ms | 40.8 ms median, 79.7 ms p95 | ACME on the same PC: 60.5 ms |
+| Prove the block | refusal by the CSE after the ACP update | 100 % of blocks | 30 / 30 verified with RSC 4103 | — |
+| Do not disturb normal devices | alerts on normal readings | 0 | 0 of 180 | — |
+| Detect value anomalies the rule misses | episodes detected (synthetic) | > rules only | rules + AI 100 % on 4 shapes | rules only: spike 100 %, others 0 % |
+| Keep false alarms low | false alerts per minute (synthetic) | ≤ 1 | 1.26 ± 0.41 | rules only 0.00; 2-in-a-row filter 0.03 |
+| Locate the source | MEC013 lookup after a block | answered | zone03 · 4g-macro-cell-6, ~1 s | — |
+| Standard APIs only | oneM2M Mca, MEC011, MEC013 | — | passed on the ETSI MEC Sandbox | — |
+
+The false-alarm target is not met by the deployed rules + AI setting; the offline two-in-a-row filter
+meets it and is the next step.
 
 [image: deliverables/slides/slide-05.png — How oneM2M and MEC work together]
 
@@ -52,7 +81,7 @@ Deployment follows oneM2M TR-0080 **Option D**: the CSE and the detector are bot
 
 ## 3. Download the project
 
-Repository: <link to the public repository>. Pinned versions: tinyIoT commit `c140495622a6271fe16c8cf92315c2892c803003`,
+Repository: https://github.com/easycode42/ccgn-edge-iot-security (Apache-2.0 code, CC BY 4.0 documents). Pinned versions: tinyIoT commit `c140495622a6271fe16c8cf92315c2892c803003`,
 ACME commit `283bd7d696090e983c07c149511102caab99642e`.
 
 ## 4. Start oneM2M platform instance
@@ -126,6 +155,22 @@ Measured on one PC, 30 runs per scenario, tinyIoT: threshold request → block a
 180 normal readings, 0 alerts. Because the block lands after the fact, about 8 more requests of a fast burst are
 served first. Offline, on synthetic data, the Isolation Forest adds detection of shifts and slow drifts that the
 range rule misses, at about 1.26 false alerts per minute.
+
+**Sequence of a request flood** (every arrow is a real oneM2M or MEC call):
+
+[image: deliverables/sequence-flood.png]
+
+**API usage**
+
+| Step | Standard | Call |
+|---|---|---|
+| Device data | oneM2M Mca | `CREATE cse-ccgn/temperature/data` (CIN), `RETRIEVE …/data` |
+| Analysis input | oneM2M Mca | `SUB detector-sub` → notification to the detector for each new CIN |
+| Alert | oneM2M Mca | `CREATE cse-ccgn/detector/alerts` (CIN) |
+| Block | oneM2M Mca | `UPDATE cse-ccgn/temperature-policy` (ACP without Ctemp), then `RETRIEVE` as Ctemp → 4103 |
+| Find the CSE | MEC011 | `POST …/applications/{appId}/services` (onem2m-cse), `GET …/services` |
+| Publish alerts | MEC011 | `POST …/services` (anomaly-alert); a consumer app discovers it |
+| Locate the source | MEC013 | `GET …/location/v3/queries/users?address=<UE>` |
 
 [images: deliverables/walkthrough/05-flood-terminal.png, 08-cse-evidence.png, 09-mec-location.png]
 
