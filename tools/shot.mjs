@@ -1,11 +1,11 @@
 // Full-page screenshot of the running dashboard with headless Edge/Chrome (for QA and slides).
-// Usage: node tools/shot.mjs <out.png> [width=1440] [wait-ms=2500]
+// Usage: node tools/shot.mjs <out.png> [width=1440] [wait-ms=2500] [url=dashboard]
 import { spawn } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const [out = "dashboard.png", width = "1440", wait = "2500"] = process.argv.slice(2);
+const [out = "dashboard.png", width = "1440", wait = "2500", url = "http://127.0.0.1:7581/"] = process.argv.slice(2);
 const browser = [process.env.CCGN_BROWSER,
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
@@ -25,7 +25,7 @@ let id = 0; const pending = new Map();
 ws.onmessage = e => { const m = JSON.parse(e.data); pending.get(m.id)?.(m); pending.delete(m.id); };
 const send = (method, params = {}) => new Promise(ok => { pending.set(++id, m => ok(m.result)); ws.send(JSON.stringify({ id, method, params })); });
 await send("Emulation.setDeviceMetricsOverride", { width: +width, height: 900, deviceScaleFactor: 1, mobile: false });
-await send("Page.navigate", { url: "http://127.0.0.1:7581/" });
+await send("Page.navigate", { url });
 await sleep(+wait);
 const { contentSize } = await send("Page.getLayoutMetrics");
 await send("Emulation.setDeviceMetricsOverride", { width: +width, height: Math.ceil(contentSize.height), deviceScaleFactor: 1, mobile: false });

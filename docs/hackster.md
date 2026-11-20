@@ -24,7 +24,7 @@ location API where they are attached.
   (MEC011, MEC013), Python 3.12, Flask, waitress, scikit-learn (Isolation Forest), requests, WSL2 Ubuntu 24.04
 - Hardware: one PC (Windows 11). Sensors are simulated oneM2M AEs.
 
-**Video:** [deliverables/CCGN_Demo.mp4] (4 min 44 s, narrated)
+**Video:** https://youtu.be/OC-kjD47Grs (4 min 44 s, narrated)
 
 ---
 
