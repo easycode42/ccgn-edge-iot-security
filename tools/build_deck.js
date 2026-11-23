@@ -346,6 +346,43 @@ async function crop(dir, file, left, top, width, height) {
   text(s, "Device-to-UE pairing is assigned for the demo; the simulated sensors have no radio of their own.",
     { x: 0.45, y: 4.6, w: 9.1, h: 0.4, fontSize: 11, italic: true, color: C.text2 });
 
+  // ── Call flow of a flood (presentation variant of the sequence diagram) ──
+  s = content("Design", "Call flow: a request flood, step by step",
+    "The same flood as a call flow. One: the temperature sensor sends a burst of retrieve requests through the request logger, " +
+    "which forwards them to tinyIoT. Two: the logger hands a record of each request to the detector. Three: more than twelve in " +
+    "two seconds is a flood. Four to six are oneM2M requests from the detector to the CSE: store an alert, update the access " +
+    "control policy without the sensor, and retrieve as the sensor to check that the CSE now answers 4103. Seven: the detector " +
+    "asks the MEC013 location API where the sensor is attached. Eight: from now on the CSE itself refuses the sensor, while the " +
+    "door sensor's requests still succeed.");
+  s.addImage({ path: path.join(ROOT, "deliverables", "sequence-flood-slide.png"), x: 0.45, y: 1.12, w: 9.1, h: 3.88,
+    altText: "Sequence diagram of a request flood: burst, request records, detection, alert CIN, ACP update, verification, MEC013 lookup" });
+  text(s, "Mca: ①②④⑤⑥⑧ oneM2M requests   ·   Mp1: ⑦ MEC013 location API   ·   every arrow is a real call in the demo",
+    { x: 0.45, y: 5.02, w: 9.1, h: 0.24, fontSize: 10, italic: true, color: C.text2 });
+
+  // ── Implementation: simulated devices ────────────────────────────────────
+  s = content("Design", "Implementation: the simulated devices",
+    "We did not buy hardware, so the devices are simulated oneM2M AEs that send exactly the requests a real device would. The " +
+    "temperature sensor Ctemp creates a content instance with a temperature value; in the normal scenario six readings around 23 " +
+    "degrees, a third of a second apart, and each one reaches the detector through the subscription. Both sensors also read their " +
+    "own container once per second, which is how the dashboard shows which service is denied. The attack tool plays the " +
+    "compromised sensor from a separate terminal. The Isolation Forest is trained on synthetic readings around 23 degrees. A real " +
+    "board that speaks oneM2M over HTTP could take Ctemp's place without changing the CSE, the detector or the MEC side.");
+  const dev = [
+    ["Temperature sensor\nAE Ctemp", "CREATE CIN  {\"temperature\": 23.0}\n(normal ≈ 23 °C)", "per reading; normal scenario: 6 readings, 0.35 s apart", "temperature/data via the request logger → notification → detector"],
+    ["Service probe\nCtemp and Cdoor", "RETRIEVE its own data container", "1 per second each", "straight to the CSE: the answer shows whether the service works"],
+    ["Attack tool\nown terminal", "flood: 40 RETRIEVEs, no delay · unknown Cunknown · Ctemp reads door/data · 65 °C and 29 °C", "on command:\nccgn attack <kind>", "through the request logger, like a compromised device"],
+    ["AI training data", "synthetic readings, 23 °C ± 0.65", "once, at start", "Isolation Forest inside the detector AE"],
+  ];
+  s.addTable([[head("Device"), head("What it sends"), head("How often"), head("Where it goes")],
+    ...dev.map(([a, b, c, d]) => [cell(a, { bold: true, fontSize: 11 }), cell(b, { fontSize: 11 }), cell(c, { fontSize: 11 }), cell(d, { fontSize: 11 })])],
+    { x: 0.45, y: 1.12, w: 9.1, colW: [1.75, 2.85, 1.9, 2.6], rowH: [0.36, 0.62, 0.55, 0.68, 0.45], valign: "middle",
+      border: { type: "solid", pt: 0.75, color: "D5DFE0" }, margin: [0.03, 0.08, 0.03, 0.08] });
+  card(s, 0.45, 4.05, 9.1, 1.0, C.background2, "Real device");
+  text(s, [{ text: "With a real device: ", options: { bold: true, color: C.accent1 } },
+    { text: "a sensor board that speaks oneM2M over HTTP (for example an ESP32 with a temperature sensor) registers as AE Ctemp and creates the same CIN. " +
+      "The CSE, the detector and the MEC side do not change; real readings would also replace the synthetic training data." }],
+    { x: 0.65, y: 4.15, w: 8.7, h: 0.82, fontSize: 12, color: C.text1, valign: "middle" });
+
   // ── 8. Dashboard tour ────────────────────────────────────────────────────
   pres.addSection({ title: "Demonstration" });
   s = content("Demonstration", "The dashboard: what each part shows",
@@ -371,54 +408,31 @@ async function crop(dir, file, left, top, width, height) {
   text(s, "Nothing on the page is simulated by the page itself: it reads the detector's event store, the CSE and the MEC platform.",
     { x: 0.45, y: 4.1, w: 9.1, h: 0.45, fontSize: 12, italic: true, color: C.text2 });
 
-  // ── 9. Demo plan ─────────────────────────────────────────────────────────
-  s = content("Demonstration", "Demo plan: five scenarios",
-    "The demo runs five scenarios. Attacks are sent by our attack tool in a separate terminal, the way a misbehaving device would, " +
-    "so what the dashboard shows is the system reacting, not a button animation. For each scenario the table says which path it " +
-    "takes and what to look at.");
-  const plan = [
-    ["Normal", "button", "sensor → CSE → notification → detector", "green points, AI score above 0, no alert"],
-    ["Unknown originator", "ccgn attack unregistered", "Cunknown → logger → CSE: 4103", "alert “unregistered”, stored in the CSE"],
-    ["Cross-device access", "ccgn attack cross", "Ctemp reads door/data: 4103", "alert “acp_violation”"],
-    ["Sensor anomaly", "ccgn attack anomaly", "65 °C and 29 °C via notification", "rule catches 65, only AI catches 29; no block"],
-    ["Request flood", "ccgn attack flood", "burst → >12 in 2 s → ACP update", "requests switch to 4103, ACP rule gone, door still OK, MEC013 location"],
-  ];
-  s.addTable([[head("Scenario"), head("Sent from"), head("Path"), head("What to look at")],
-    ...plan.map(([a, b, c, d]) => [cell(a, { bold: true }), cell(b, { fontFace: "Consolas", fontSize: 11 }), cell(c), cell(d)])],
-    { x: 0.45, y: 1.15, w: 9.1, colW: [1.6, 2.05, 2.6, 2.85], rowH: 0.6, valign: "middle", border: { type: "solid", pt: 0.75, color: "D5DFE0" }, margin: [0.03, 0.08, 0.03, 0.08] });
-  text(s, "Each scenario first restores access, so they can be run in any order. Video: deliverables/CCGN_Demo.mp4.",
-    { x: 0.45, y: 4.9, w: 9.1, h: 0.3, fontSize: 11, italic: true, color: C.text2 });
-
-  // ── 10. Demo: flood ──────────────────────────────────────────────────────
-  s = content("Demonstration", "Demo: the flood, from the attacker's terminal",
-    "The flood in the recorded run. On the right, the attack tool's own output: requests succeed with 2000 until the detector " +
-    "acts, then the CSE answers 4103. Behind it, the architecture shows the ACP update and the alert in red, the temperature policy " +
-    "marked as blocked, and the MEC platform highlighted for the location lookup.");
-  s.addImage({ data: await crop("walkthrough", "05-flood-terminal.png", 0, 0, 1920, 940), x: 0.45, y: 1.12, w: 7.6, h: 3.72,
-    altText: "Flood: terminal output with requests switching to RSC 4103, and the architecture diagram" });
-  s.addShape(pres.ShapeType.rect, { x: 0.45, y: 1.12, w: 7.6, h: 3.72, fill: { type: "none" }, line: { color: "D5DFE0", width: 0.75 } });
-  [["2000 → 4103", "the CSE's own answer to the sensor changes", C.accent2], ["ACP", "temperature-policy marked blocked", C.accent3], ["MEC013", "location lookup after the block", C.accent5]].forEach(([a, b, color], i) => {
-    const y = 1.12 + i * 1.3;
-    card(s, 8.2, y, 1.35, 1.18, C.background2, a);
-    text(s, a, { x: 8.3, y: y + 0.1, w: 1.2, h: 0.4, fontSize: a.length > 8 ? 12 : 15, bold: true, color, fontFace: "Cambria" });
-    text(s, b, { x: 8.3, y: y + 0.52, w: 1.2, h: 0.62, fontSize: 10, color: C.text2 });
-  });
-
-  // ── 11. Demo: evidence ───────────────────────────────────────────────────
+  // ── Demo: evidence (large text instead of screenshots) ──────────────────
   s = content("Demonstration", "Demo: the evidence comes from the CSE and from MEC",
-    "The proof is not in the dashboard's own state. On the left, values read from tinyIoT: the temperature sensor's access rule " +
-    "has been removed, and the alert is stored in the detector's alerts container. On the right, the ETSI MEC Sandbox location " +
-    "API: the flooding device is user equipment 10.1.0.1 in zone 3, on 4G macro cell 6; the door sensor is elsewhere and unaffected.");
-  s.addImage({ data: await crop("walkthrough", "08-cse-evidence.png", 0, 0, 960, 560), x: 0.45, y: 1.12, w: 4.45, h: 2.6,
-    altText: "Values read from the CSE: ACP rule for Ctemp removed, latest alert" });
-  s.addShape(pres.ShapeType.rect, { x: 0.45, y: 1.12, w: 4.45, h: 2.6, fill: { type: "none" }, line: { color: "D5DFE0", width: 0.75 } });
-  s.addImage({ data: await crop("walkthrough", "09-mec-location.png", 960, 372, 960, 240), x: 5.1, y: 1.12, w: 4.45, h: 1.11,
-    altText: "MEC013 location table: Ctemp at UE 10.1.0.1, zone03, 4g-macro-cell-6" });
-  s.addShape(pres.ShapeType.rect, { x: 5.1, y: 1.12, w: 4.45, h: 1.11, fill: { type: "none" }, line: { color: "D5DFE0", width: 0.75 } });
-  text(s, [{ text: "From tinyIoT: ", options: { bold: true } }, { text: "Ctemp's ACP rule is gone; the alert CIN is in detector/alerts." }],
-    { x: 0.45, y: 3.9, w: 4.45, h: 0.6, fontSize: 13, color: C.text1 });
-  text(s, [{ text: "From the ETSI MEC Sandbox: ", options: { bold: true } }, { text: `${loc.origin} = UE ${loc.address}, ${loc.zone}, ${loc.access_point}.` }],
-    { x: 5.1, y: 2.4, w: 4.45, h: 0.6, fontSize: 13, color: C.text1 });
+    "The proof is not the dashboard's own state. After the flood we read tinyIoT directly: the temperature sensor's rule is gone " +
+    "from the temperature policy, and the detector's alert is stored as a content instance. The ETSI MEC Sandbox location API " +
+    `places the flooding sensor at user equipment ${loc.address}, ${loc.zone}, ${loc.access_point}. And the service check shows ` +
+    "the effect: the temperature sensor is refused, the door sensor still works.");
+  const ev = [
+    ["tinyIoT · temperature-policy", "Ctemp rule removed", "read as CAdmin after the flood: only CAdmin and Cdetector may access temperature/data", C.accent2],
+    ["tinyIoT · detector/alerts", "Alert CIN stored", "written by the detector AE; any oneM2M application can read it", C.accent3],
+    ["ETSI MEC Sandbox · MEC013", `${loc.zone}
+${loc.access_point}`, `${loc.origin} = UE ${loc.address}, answered by the location API`, C.accent5],
+  ];
+  ev.forEach(([src, big, small, color], i) => {
+    const x = 0.45 + i * 3.08;
+    card(s, x, 1.15, 2.92, 2.4, C.background2, src);
+    text(s, src, { x: x + 0.2, y: 1.3, w: 2.55, h: 0.3, fontSize: 11, bold: true, color: C.text2 });
+    text(s, big, { x: x + 0.2, y: 1.68, w: 2.55, h: 0.75, fontSize: 22, bold: true, color, fontFace: "Cambria" });
+    text(s, small, { x: x + 0.2, y: 2.5, w: 2.55, h: 0.95, fontSize: 12, color: C.text1 });
+  });
+  card(s, 0.45, 3.75, 9.1, 1.25, C.background2, "Service check");
+  text(s, "Service check, one request per second as each device", { x: 0.65, y: 3.85, w: 8.7, h: 0.3, fontSize: 12, bold: true, color: C.text2 });
+  text(s, [{ text: "Ctemp → temp/data   ", options: { color: C.text1 } }, { text: "RSC 4103 denied", options: { bold: true, color: C.accent2 } }],
+    { x: 0.65, y: 4.25, w: 4.6, h: 0.55, fontSize: 16, fontFace: "Cambria", valign: "middle" });
+  text(s, [{ text: "Cdoor → door/data   ", options: { color: C.text1 } }, { text: "RSC 2000 OK", options: { bold: true, color: C.accent1 } }],
+    { x: 5.35, y: 4.25, w: 4.0, h: 0.55, fontSize: 16, fontFace: "Cambria", valign: "middle" });
 
   // ── 7. Latency ───────────────────────────────────────────────────────────
   pres.addSection({ title: "Results" });
@@ -580,10 +594,10 @@ async function crop(dir, file, left, top, width, height) {
     { text: "Run the detector and CSE as hosted MEC applications", options: { bullet: true } },
   ], { placeholder: "body" });
   await badge(s, "FaShieldAlt", 7.75, 1.85, 1.8, C.accent1);
-  text(s, "Reproduce:  setup.ps1  →  start.ps1  →  python -m ccgn demo | benchmark | evaluate | mec-check --sandbox",
+  text(s, "Reproduce (WSL):  tools/setup_tinyiot.sh  →  tools/ccgn_wsl.sh run [--mec sandbox]  →  ccgn_wsl.sh attack flood | demo | benchmark",
     { x: 0.6, y: 4.85, w: 8.8, h: 0.3, fontSize: 11, color: C.background1 });
   s.addNotes("To close: with nothing but oneM2M resources and the MEC011 service APIs, the prototype detects four kinds of misbehaviour, " +
-    "blocks a flooding sensor in about sixty milliseconds, and proves the block with the CSE's own answer. The next steps are authenticated " +
+    `blocks a flooding sensor in about ${r0(enf.median)} milliseconds, and proves the block with the CSE's own answer. The next steps are authenticated ` +
     "identity, a persistence filter to cut false alerts, more sensors with real data, and hosting both parts as MEC applications. " +
     "Everything shown can be reproduced with the commands on this slide. Thank you.");
 
