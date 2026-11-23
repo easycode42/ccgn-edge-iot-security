@@ -13,6 +13,9 @@ const { renderToStaticMarkup } = require("react-dom/server");
 const fa = require("react-icons/fa");
 
 const ROOT = path.resolve(__dirname, "..");
+// Speaker notes: one script entry per slide, in slide order (tools/speaker_script.json).
+const SCRIPT = JSON.parse(fs.readFileSync(path.join(__dirname, "speaker_script.json"), "utf8"));
+let noteIdx = 0;
 const OUT = path.join(ROOT, "deliverables", "CCGN_Final_Report.pptx");
 const latest = (prefix, keep = () => true) => {
   const found = fs.readdirSync(path.join(ROOT, "reports"))
@@ -94,7 +97,7 @@ async function crop(dir, file, left, top, width, height) {
   const content = (section, title, notes) => {
     const s = pres.addSlide({ masterName: "CONTENT", sectionTitle: section });
     s.addText(title, { placeholder: "title" });
-    s.addNotes(notes);
+    s.addNotes(SCRIPT[noteIdx++] || notes);
     return s;
   };
 
@@ -108,7 +111,7 @@ async function crop(dir, file, left, top, width, height) {
     { text: "2026 oneM2M International Developer Competition  ·  November 2026", options: { fontSize: 11 } },
   ], { placeholder: "body" });
   await badge(s, "FaShieldAlt", 7.75, 1.85, 1.8, C.accent1);
-  s.addNotes("Team CCGN is a one-person team, Jiho Lee, working with AI coding assistants. The interim report in October " +
+  s.addNotes(SCRIPT[noteIdx++] || "Team CCGN is a one-person team, Jiho Lee, working with AI coding assistants. The interim report in October " +
     "covered the use case and the architecture. This final report shows the working prototype, what we measured, " +
     "and the interworking check against the real ETSI MEC Sandbox.");
 
@@ -596,11 +599,12 @@ ${loc.access_point}`, `${loc.origin} = UE ${loc.address}, answered by the locati
   await badge(s, "FaShieldAlt", 7.75, 1.85, 1.8, C.accent1);
   text(s, "Reproduce (WSL):  tools/setup_tinyiot.sh  →  tools/ccgn_wsl.sh run [--mec sandbox]  →  ccgn_wsl.sh attack flood | demo | benchmark",
     { x: 0.6, y: 4.85, w: 8.8, h: 0.3, fontSize: 11, color: C.background1 });
-  s.addNotes("To close: with nothing but oneM2M resources and the MEC011 service APIs, the prototype detects four kinds of misbehaviour, " +
+  s.addNotes(SCRIPT[noteIdx++] || "To close: with nothing but oneM2M resources and the MEC011 service APIs, the prototype detects four kinds of misbehaviour, " +
     `blocks a flooding sensor in about ${r0(enf.median)} milliseconds, and proves the block with the CSE's own answer. The next steps are authenticated ` +
     "identity, a persistence filter to cut false alerts, more sensors with real data, and hosting both parts as MEC applications. " +
     "Everything shown can be reproduced with the commands on this slide. Thank you.");
 
+  if (noteIdx !== SCRIPT.length) throw new Error(`speaker_script.json has ${SCRIPT.length} entries for ${noteIdx} slides`);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   await pres.writeFile({ fileName: OUT });
   // pptxgenjs cannot write theme colours: put THEME's palette and name into the theme part.
